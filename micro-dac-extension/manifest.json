@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Hangout/Squiglink PEQ to CrinEar Protocol Micro",
+  "version": "1.0.0",
+  "description": "Send the 8-band parametric EQ from eq.hangout.audio (or squig.link) to the CrinEar Protocol Micro through the local v3 backend.",
+  "permissions": [],
+  "host_permissions": [
+    "http://127.0.0.1:8766/*",
+    "http://localhost:8766/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "PEQ to Protocol Micro"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://eq.hangout.audio/*",
+        "https://*.hangout.audio/*",
+        "https://squig.link/*",
+        "https://*.squig.link/*"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "js": [
+        "peq-core.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+* { box-sizing: border-box; }
+body { margin: 0 auto; padding: 24px; max-width: 960px; font: 14px system-ui, sans-serif; color: #172026; background: #f3f5f4; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+h1 { font-size: 24px; } h2 { font-size: 18px; }
+section { padding: 12px 0 24px; border-top: 1px solid #cbd3d0; }
+button, input, select { font: inherit; padding: 7px; border: 1px solid #a5b2ad; border-radius: 4px; background: white; color: inherit; }
+button { cursor: pointer; } button:disabled { cursor: wait; opacity: .6; }
+.settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+label { display: grid; gap: 5px; }
+.geq-row { display: grid; grid-template-columns: 48px 1fr 45px; gap: 10px; align-items: center; }
+.geq-slider { width: 100%; }
+canvas { width: 100%; height: 220px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 5px; text-align: left; }
+td input, td select { width: 100%; min-width: 80px; }
+#status[data-error="true"] { color: #a32929; }

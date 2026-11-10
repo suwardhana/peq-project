@@ -1,0 +1,164 @@
+.micro-dac-panel {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 10px 0 12px;
+  padding: 10px;
+  border: 1px solid #c7d4df;
+  border-radius: 9px;
+  background:
+    linear-gradient(135deg, rgba(43, 118, 179, 0.08), rgba(43, 118, 179, 0.02)),
+    #f8fbfd;
+  font-family: "Open Sans", Arial, sans-serif;
+}
+
+.micro-dac-panel .micro-dac-apply {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 0 !important;
+  border-radius: 7px !important;
+  background: linear-gradient(180deg, #2d73a7 0%, #226aa6 100%);
+  box-shadow: 0 2px 5px rgba(22, 66, 105, 0.24);
+  color: #fff !important;
+  cursor: pointer;
+  font: 700 14px/1.2 "Open Sans", Arial, sans-serif !important;
+  letter-spacing: 0.01em;
+  text-transform: none !important;
+  text-decoration: none !important;
+  transition: filter 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+  -webkit-text-fill-color: #fff !important;
+}
+
+.micro-dac-panel .micro-dac-apply:hover:not(:disabled) {
+  filter: brightness(1.07);
+  box-shadow: 0 3px 8px rgba(22, 66, 105, 0.32);
+}
+
+.micro-dac-panel .micro-dac-apply:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.micro-dac-panel .micro-dac-apply:focus-visible {
+  outline: 3px solid rgba(43, 118, 179, 0.32);
+  outline-offset: 2px;
+}
+
+.micro-dac-panel .micro-dac-apply:disabled,
+.micro-dac-panel .micro-dac-apply[data-busy="true"] {
+  background: #6a7683 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color: #fff !important;
+  cursor: not-allowed;
+  filter: none;
+  opacity: 1;
+  -webkit-text-fill-color: #fff !important;
+}
+
+.micro-dac-panel .micro-dac-apply[data-busy="true"] .micro-dac-label::after {
+  content: "…";
+}
+
+.micro-dac-panel .micro-dac-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.micro-dac-panel .micro-dac-count {
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  font: 700 12px/1.5 "Open Sans", Arial, sans-serif;
+}
+
+.micro-dac-panel .micro-dac-count[data-invalid="true"] {
+  background: rgba(255, 214, 102, 0.9);
+  color: #3a2a00;
+  -webkit-text-fill-color: #3a2a00;
+}
+
+.micro-dac-panel .micro-dac-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  color: #5b6a78 !important;
+  font: 600 11.5px/1.4 "Open Sans", Arial, sans-serif !important;
+  text-transform: none !important;
+}
+
+.micro-dac-panel .micro-dac-pre {
+  color: #5b6a78 !important;
+  font: 600 11.5px/1.4 "Open Sans", Arial, sans-serif !important;
+  text-transform: none !important;
+}
+
+.micro-dac-panel .micro-dac-status {
+  display: none !important;
+  margin-top: 8px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: rgba(90, 108, 124, 0.1);
+  color: #33414e;
+  font: 600 12px/1.45 "Open Sans", Arial, sans-serif;
+  overflow-wrap: anywhere;
+}
+
+.micro-dac-panel .micro-dac-status[data-visible="true"] {
+  display: block !important;
+}
+
+.micro-dac-panel .micro-dac-status[data-tone="pending"] {
+  background: rgba(43, 118, 179, 0.1);
+  color: #1d5c86;
+}
+
+.micro-dac-panel .micro-dac-status[data-tone="success"] {
+  background: rgba(22, 138, 79, 0.12);
+  color: #0f6b3c;
+}
+
+.micro-dac-panel .micro-dac-status[data-tone="warning"] {
+  background: rgba(191, 129, 12, 0.14);
+  color: #7a5200;
+}
+
+.micro-dac-panel .micro-dac-status[data-tone="error"] {
+  background: rgba(190, 44, 44, 0.12);
+  color: #8f1f1f;
+}
+
+.micro-dac-panel .micro-dac-trim {
+  display: none !important;
+  align-items: center;
+  padding: 3px 9px;
+  border: 1px solid rgba(43, 118, 179, 0.45) !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #22608f !important;
+  cursor: pointer;
+  font: 700 11px/1.5 "Open Sans", Arial, sans-serif !important;
+  text-transform: none !important;
+  white-space: nowrap;
+  -webkit-text-fill-color: #22608f !important;
+}
+
+.micro-dac-panel .micro-dac-trim[data-visible="true"] {
+  display: inline-flex !important;
+}
+
+.micro-dac-panel .micro-dac-trim:hover {
+  background: rgba(43, 118, 179, 0.1) !important;
+  border-color: #22608f !important;
+}
+
+.micro-dac-panel .micro-dac-trim:focus-visible {
+  outline: 2px solid rgba(43, 118, 179, 0.45);
+  outline-offset: 2px;
+}

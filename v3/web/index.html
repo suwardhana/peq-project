@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Protocol Micro — PEQ</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <div>
+      <h1>CrinEar Protocol Micro</h1>
+      <p id="device-line" class="device-line">Looking for DAC…</p>
+    </div>
+  </div>
+  <div id="status-pill" class="pill" role="status">Connecting…</div>
+</header>
+
+<div id="offline-banner" class="banner" hidden>
+  <span>DAC not connected. Plug in the Protocol Micro, then retry.</span>
+  <button id="retry-btn" type="button" class="btn small">Retry</button>
+</div>
+
+<main id="app" class="layout" aria-busy="true">
+  <section class="panel wide" aria-labelledby="peq-h">
+    <div class="panel-head">
+      <h2 id="peq-h">Parametric EQ</h2>
+      <div class="peq-actions">
+        <span id="peq-status" class="mini-status"></span>
+        <button id="reset-all" type="button" class="btn small ghost">Reset all flat</button>
+      </div>
+    </div>
+    <div class="graph-shell">
+      <canvas id="graph" tabindex="0" role="application"
+        aria-label="EQ curve. Drag a band dot to change frequency and gain. Arrow keys adjust the selected band."></canvas>
+    </div>
+    <p class="hint">Drag dots directly &middot; double-click resets gain &middot;
+      &uarr;&darr; gain &middot; &larr;&rarr; switch band &middot; Shift = coarse</p>
+    <div id="chips" class="chips" role="listbox" aria-label="Bands"></div>
+    <form id="editor" class="editor" autocomplete="off">
+      <div class="field">
+        <label for="f-freq">Freq Hz</label>
+        <div class="stepper">
+          <button type="button" data-step="freq,-1" aria-label="Frequency down">&minus;</button>
+          <input id="f-freq" inputmode="numeric" pattern="[0-9]*">
+          <button type="button" data-step="freq,1" aria-label="Frequency up">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-gain">Gain dB</label>
+        <div class="stepper">
+          <button type="button" data-step="gain,-0.1" aria-label="Gain down">&minus;</button>
+          <input id="f-gain" inputmode="decimal">
+          <button type="button" data-step="gain,0.1" aria-label="Gain up">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-q">Q</label>
+        <div class="stepper">
+          <button type="button" data-step="q,-0.01" aria-label="Q down">&minus;</button>
+          <input id="f-q" inputmode="decimal">
+          <button type="button" data-step="q,0.01" aria-label="Q up">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-type">Type</label>
+        <select id="f-type">
+          <option>BYPASS</option><option>PEAK</option><option>LSHELF</option>
+          <option>HSHELF</option><option>LPF</option><option>HPF</option>
+        </select>
+      </div>
+      <button id="reset-band" type="button" class="btn small ghost">Reset band</button>
+    </form>
+    <details id="import-box" class="import-box">
+      <summary>Import AutoEq…</summary>
+      <p class="hint">Paste AutoEq <em>ParametricEQ.txt</em> or pick the file.
+        The preamp goes to the device pregain register (whole dB). Tick the box
+        to fold it into the band gains instead.</p>
+      <textarea id="import-text" rows="6" spellcheck="false" placeholder="Preamp: -1.9 dB&#10;Filter 1: ON PK Fc 35 Hz Gain -0.6 dB Q 1.200&#10;…"></textarea>
+      <div class="import-row">
+        <label class="check"><input id="import-preamp" type="checkbox"> Fold preamp into bands</label>
+        <input id="import-file" type="file" accept=".txt,text/plain">
+        <button id="import-btn" type="button" class="btn small primary">Import &amp; apply</button>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel" aria-labelledby="dev-h">
+    <div class="panel-head"><h2 id="dev-h">Device</h2></div>
+    <div class="ctl-grid">
+      <div class="ctl">
+        <span class="ctl-label">Pregain <em>(global, whole dB)</em></span>
+        <div class="stepper">
+          <button type="button" id="pre-down" aria-label="Pregain down">&minus;</button>
+          <input id="pre" type="number" min="-12" max="0" step="1" inputmode="numeric">
+          <button type="button" id="pre-up" aria-label="Pregain up">+</button>
+        </div>
+      </div>
+    </div>
+    <p id="raw-line" class="raw"></p>
+  </section>
+</main>
+
+<footer class="foot">Protocol Micro &middot; 8 bands &middot; local control &middot;
+  curves computed identical to device DSP (RBJ @ 96 kHz)</footer>
+<script src="/autoeq.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

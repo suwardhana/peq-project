@@ -1,0 +1,131 @@
+.ru3-dac-panel {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 10px 0 12px;
+  padding: 10px;
+  border: 1px solid #c7d4df;
+  border-radius: 9px;
+  background:
+    linear-gradient(135deg, rgba(43, 118, 179, 0.08), rgba(43, 118, 179, 0.02)),
+    #f8fbfd;
+  font-family: "Open Sans", Arial, sans-serif;
+}
+
+.ru3-dac-apply {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #2d73a7 0%, #226aa6 100%);
+  box-shadow: 0 2px 5px rgba(22, 66, 105, 0.24);
+  color: #fff !important;
+  cursor: pointer;
+  font: 700 14px/1.2 "Open Sans", Arial, sans-serif;
+  letter-spacing: 0.01em;
+  transition: filter 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+  -webkit-text-fill-color: #fff !important;
+}
+
+.ru3-dac-apply:hover:not(:disabled) {
+  filter: brightness(1.07);
+  box-shadow: 0 3px 8px rgba(22, 66, 105, 0.32);
+}
+
+.ru3-dac-apply:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.ru3-dac-apply:focus-visible {
+  outline: 3px solid rgba(43, 118, 179, 0.32);
+  outline-offset: 2px;
+}
+
+.ru3-dac-apply:disabled,
+.ru3-dac-apply[data-busy="true"] {
+  background: #6a7683 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color: #fff !important;
+  cursor: not-allowed;
+  filter: none;
+  opacity: 1;
+  -webkit-text-fill-color: #fff !important;
+}
+
+.ru3-dac-apply[data-busy="true"] {
+  cursor: wait;
+}
+
+.ru3-dac-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ru3-dac-label {
+  color: #fff !important;
+  white-space: nowrap;
+  -webkit-text-fill-color: #fff !important;
+}
+
+.ru3-dac-count {
+  min-width: 40px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff !important;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  -webkit-text-fill-color: #fff !important;
+}
+
+.ru3-dac-count[data-invalid="true"] {
+  background: #ffe5a5;
+  color: #7a4d00 !important;
+  -webkit-text-fill-color: #7a4d00 !important;
+}
+
+.ru3-dac-panel[data-state="empty"] {
+  border-color: #d2d9df;
+  background: #f7f8f9;
+}
+
+.ru3-dac-status {
+  margin-top: 8px;
+  padding: 8px 9px;
+  border-left: 3px solid #6b7c8b;
+  border-radius: 4px;
+  background: #edf2f6;
+  color: #344652;
+  font: 12px/1.45 "Open Sans", Arial, sans-serif;
+  overflow-wrap: anywhere;
+}
+
+.ru3-dac-status[data-tone="pending"] {
+  border-color: #2b76b3;
+  background: #eaf3fb;
+  color: #225783;
+}
+
+.ru3-dac-status[data-tone="success"] {
+  border-color: #2c8a55;
+  background: #e9f7ef;
+  color: #1e6740;
+}
+
+.ru3-dac-status[data-tone="warning"] {
+  border-color: #c68b17;
+  background: #fff7df;
+  color: #76530d;
+}
+
+.ru3-dac-status[data-tone="error"] {
+  border-color: #c84a43;
+  background: #fdeeed;
+  color: #8b2925;
+}

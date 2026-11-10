@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>RU3 Control Deck</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <div>
+      <h1>Cayin RU3 <span class="vtag">v4</span></h1>
+      <p id="device-line" class="device-line">Looking for DAC…</p>
+    </div>
+  </div>
+  <div id="status-pill" class="pill" role="status">Connecting…</div>
+</header>
+
+<div id="offline-banner" class="banner" hidden>
+  <span>DAC not connected. Plug in the Cayin RU3 and select it in Chrome.</span>
+  <button id="retry-btn" type="button" class="btn small">Connect DAC</button>
+</div>
+
+<main id="app" class="layout" aria-busy="true">
+  <div class="eq-editors">
+    <div class="seg eq-tabs" role="tablist" aria-label="Equalizer editor">
+      <button id="tab-geq" type="button" role="tab" aria-selected="false" aria-controls="geq-panel" tabindex="-1">Graphic EQ</button>
+      <button id="tab-peq" type="button" role="tab" aria-selected="true" aria-controls="peq-panel">Parametric EQ</button>
+    </div>
+  <section id="geq-panel" class="panel wide geq-panel" role="tabpanel" aria-labelledby="tab-geq" hidden>
+    <div class="panel-head">
+      <div><span class="geq-eyebrow">10 fixed bands</span><h2>Graphic EQ</h2></div>
+      <button id="geq-reset" type="button" class="btn small ghost" disabled>Reset flat</button>
+    </div>
+    <div id="geq-warn" class="eq-warn" hidden>
+      <span id="geq-warn-text"></span>
+      <button id="geq-on-btn" type="button" class="btn small primary">Use Graphic</button>
+    </div>
+    <p class="geq-intro">Shape your sound, one frequency at a time.</p>
+    <div class="geq-tray"><div id="geq-sliders" class="geq-sliders" aria-label="Graphic EQ bands"></div></div>
+    <div class="geq-footer">
+      <span id="geq-status" class="mini-status" role="status">Load the DAC to edit GEQ.</span>
+      <button id="geq-reload" type="button" class="btn small ghost">Read from DAC</button>
+    </div>
+    <p class="hint">&minus;12 to +12 dB &middot; double-click a slider to zero it &middot; changes save automatically</p>
+  </section>
+  <section id="peq-panel" class="panel wide" role="tabpanel" aria-labelledby="tab-peq">
+    <div class="panel-head">
+      <h2 id="peq-h">Parametric EQ</h2>
+      <div class="peq-actions">
+        <span id="peq-status" class="mini-status"></span>
+        <button id="reset-all" type="button" class="btn small ghost">Reset all flat</button>
+      </div>
+    </div>
+    <div id="eq-warn" class="eq-warn" hidden>
+      <span id="eq-warn-text"></span>
+      <button id="eq-on-btn" type="button" class="btn small primary">Use Parametric</button>
+    </div>
+    <div class="graph-shell">
+      <canvas id="graph" tabindex="0" role="application"
+        aria-label="EQ curve. Drag a band dot to change frequency and gain. Arrow keys adjust the selected band."></canvas>
+    </div>
+    <p class="hint">Drag dots directly &middot; double-click resets gain &middot;
+      &uarr;&darr; gain &middot; &larr;&rarr; switch band &middot; Shift = coarse</p>
+    <div id="chips" class="chips" role="listbox" aria-label="Bands"></div>
+    <form id="editor" class="editor" autocomplete="off">
+      <div class="field">
+        <label for="f-freq">Freq Hz</label>
+        <div class="stepper">
+          <button type="button" data-step="freq,-1" aria-label="Frequency down">&minus;</button>
+          <input id="f-freq" inputmode="numeric" pattern="[0-9]*">
+          <button type="button" data-step="freq,1" aria-label="Frequency up">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-gain">Gain dB</label>
+        <div class="stepper">
+          <button type="button" data-step="gain,-0.1" aria-label="Gain down">&minus;</button>
+          <input id="f-gain" inputmode="decimal">
+          <button type="button" data-step="gain,0.1" aria-label="Gain up">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-q">Q</label>
+        <div class="stepper">
+          <button type="button" data-step="q,-0.01" aria-label="Q down">&minus;</button>
+          <input id="f-q" inputmode="decimal">
+          <button type="button" data-step="q,0.01" aria-label="Q up">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-type">Type</label>
+        <select id="f-type">
+          <option>BYPASS</option><option>LSHELF</option><option>PEAK</option>
+          <option>HSHELF</option><option>LPF</option><option>HPF</option>
+        </select>
+      </div>
+      <button id="reset-band" type="button" class="btn small ghost">Reset band</button>
+    </form>
+    <details id="import-box" class="import-box">
+      <summary>Import AutoEq…</summary>
+      <p class="hint">Paste AutoEq <em>ParametricEQ.txt</em> or pick the file.
+        Preamp is folded into every band (the DAC has no preamp control).</p>
+      <textarea id="import-text" rows="6" spellcheck="false" placeholder="Preamp: -1.9 dB&#10;Filter 1: ON PK Fc 35 Hz Gain -0.6 dB Q 1.200&#10;…"></textarea>
+      <div class="import-row">
+        <label class="check"><input id="import-preamp" type="checkbox" checked> Fold preamp into gains</label>
+        <input id="import-file" type="file" accept=".txt,text/plain">
+        <button id="import-btn" type="button" class="btn small primary">Import &amp; apply</button>
+      </div>
+    </details>
+  </section>
+  </div>
+
+  <section class="panel" aria-labelledby="dev-h">
+    <div class="panel-head"><h2 id="dev-h">Device</h2></div>
+    <div class="vol-row">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M16.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <button id="vol-down" type="button" class="btn round" aria-label="Volume down">&minus;</button>
+      <input id="vol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume">
+      <button id="vol-up" type="button" class="btn round" aria-label="Volume up">+</button>
+      <output id="vol-num" for="vol">–</output>
+    </div>
+    <div class="ctl-grid">
+      <div class="ctl"><span class="ctl-label">Gain</span>
+        <div class="seg" id="seg-gain" role="group" aria-label="Gain">
+          <button type="button" data-v="0">Low</button><button type="button" data-v="1">High</button>
+        </div></div>
+      <div class="ctl"><span class="ctl-label">Output</span>
+        <div class="seg" id="seg-output" role="group" aria-label="Output">
+          <button type="button" data-v="0">PO</button><button type="button" data-v="1">LO</button>
+        </div></div>
+      <div class="ctl"><span class="ctl-label">Working mode</span>
+        <div class="seg" id="seg-work" role="group" aria-label="Working mode">
+          <button type="button" data-v="0">STD</button><button type="button" data-v="1">HYP</button>
+        </div></div>
+      <div class="ctl"><span class="ctl-label">Equalizer</span>
+        <div class="seg" id="seg-eq" role="group" aria-label="Equalizer preset">
+          <button type="button" data-v="0">OFF</button><button type="button" data-v="8">GEQ</button><button type="button" data-v="9">PEQ</button>
+        </div></div>
+      <div class="ctl"><span class="ctl-label">UAC <em>(reconnects USB)</em></span>
+        <div class="seg" id="seg-uac" role="group" aria-label="UAC mode">
+          <button type="button" data-v="0">1.0</button><button type="button" data-v="1">2.0</button>
+        </div></div>
+      <div class="ctl"><span class="ctl-label">PCM filter</span>
+        <select id="sel-filter" aria-label="PCM filter"></select>
+      </div>
+    </div>
+    <p id="raw-line" class="raw"></p>
+  </section>
+</main>
+
+<footer class="foot">RU3 v4 &middot; local WebHID control &middot; RBJ @ 96 kHz</footer>
+<script src="ru3.js"></script>
+<script src="device-api.js"></script>
+<script src="autoeq.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

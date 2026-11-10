@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Cayin RU3 Control",
+  "version": "1.0.0",
+  "description": "Control the Cayin RU3 and apply Squiglink PEQ using WebHID.",
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "Open Cayin RU3 Control" },
+  "content_scripts": [{
+    "matches": ["https://squig.link/*", "https://*.squig.link/*"],
+    "css": ["content.css"],
+    "js": ["peq-core.js", "content.js"],
+    "run_at": "document_idle"
+  }]
+}

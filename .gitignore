@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.venv-mac/
+*.egg-info/
+build/
+dist/
+
+# Project runtime output
+v2/logs/
+v3/logs/
+*.log
+
+# Huge generated RE artifacts (re-extractable from the APK)
+scratch/apk_extracted/
+scratch/jadx_full/
+
+# 260 MB vendor APK — keep out of git; force-add if you really want it
+cayin-v1.1.3+39.apk
+
+# AI-generated debug/reverse-engineering scratch work
+scratch/
+
+# Local tooling / agent state
+.agents/
+.workbuddy-ai/
+skills-lock.json
+*.zip
+
+# OS/editor noise
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~

@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Cayin RU3 — Studio Master 10-Band PEQ & DAC Controller</title>
+  
+  <!-- Premium Typography: Plus Jakarta Sans, Syne, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            display: ['"Syne"', '"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            cayin: {
+              amber: '#f59e0b',
+              glow: '#fbbf24',
+              dim: '#d97706',
+              dark: '#78350f',
+              cyan: '#06b6d4',
+              surface: '#0d0f14',
+              card: '#12151d',
+              border: 'rgba(255, 255, 255, 0.08)',
+              subtle: 'rgba(255, 255, 255, 0.03)',
+            }
+          },
+          animation: {
+            'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'glow-drift': 'glowDrift 8s ease-in-out infinite alternate',
+          },
+          keyframes: {
+            glowDrift: {
+              '0%': { transform: 'translate(0, 0) scale(1)', opacity: '0.15' },
+              '100%': { transform: 'translate(30px, -20px) scale(1.15)', opacity: '0.28' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(10, 12, 16, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.35); }
+
+    .bg-grain {
+      background-image: radial-gradient(rgba(245, 158, 11, 0.04) 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+
+    /* Double Bezel Architecture (Doppelrand) */
+    .double-bezel {
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    .inner-core {
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: #0d0f15;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      background: rgba(255, 255, 255, 0.08);
+      height: 4px;
+      border-radius: 999px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.8), 0 0 2px #fff;
+      margin-top: -5px;
+      transition: transform 0.15s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.15s ease;
+    }
+    input[type="range"]:hover::-webkit-slider-thumb {
+      transform: scale(1.25);
+      box-shadow: 0 0 18px rgba(245, 158, 11, 1), 0 0 4px #fff;
+    }
+
+    .ease-vanguard {
+      transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .led-glow {
+      box-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+    }
+  </style>
+</head>
+
+<body class="bg-[#06070a] text-zinc-100 font-sans min-h-[100dvh] flex flex-col selection:bg-amber-500/20 selection:text-amber-300 relative overflow-x-hidden">
+
+  <!-- Atmospheric Background Glowing Orbs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-[130px] animate-glow-drift"></div>
+    <div class="absolute top-[40%] -right-[15%] w-[700px] h-[700px] rounded-full bg-cyan-500/8 blur-[150px] animate-glow-drift" style="animation-delay: -4s;"></div>
+    <div class="absolute bottom-[-20%] left-[25%] w-[500px] h-[500px] rounded-full bg-orange-600/5 blur-[120px]"></div>
+    <div class="absolute inset-0 bg-grain opacity-40"></div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="relative z-10 flex flex-col min-h-screen w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- ── TOP HEADER / FLOATING APP BAR ── -->
+    <header class="double-bezel rounded-2xl p-1.5 transition-all duration-500">
+      <div class="inner-core rounded-[calc(1rem-0.125rem)] px-5 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        
+        <!-- Left: Logo & Model Badge -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 via-zinc-900 to-black border border-amber-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+            <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="font-display font-bold text-lg tracking-wider bg-gradient-to-r from-zinc-100 via-zinc-200 to-amber-200 bg-clip-text text-transparent">
+                CAYIN RU3
+              </h1>
+              <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold">
+                ES9069Q • 10-Band PEQ
+              </span>
+            </div>
+            <p class="text-xs text-zinc-400 font-mono tracking-tight flex items-center gap-1.5 mt-0.5">
+              <span>Studio Hardware Control Deck</span>
+              <span class="w-1 h-1 rounded-full bg-zinc-600"></span>
+              <span id="headerFwInfo" class="text-zinc-500">FW v1.0.3+ Target</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Center: Status & Quick Metric -->
+        <div class="hidden md:flex items-center space-x-6 text-xs font-mono">
+          <div class="flex items-center space-x-2 bg-zinc-900/60 px-3.5 py-1.5 rounded-lg border border-white/5">
+            <span class="text-zinc-500 uppercase tracking-wider text-[10px]">UAC Mode</span>
+            <span id="chipUacStatus" class="font-bold text-amber-400">UAC 2.0</span>
+          </div>
+          <div class="flex items-center space-x-2 bg-zinc-900/60 px-3.5 py-1.5 rounded-lg border border-white/5">
+            <span class="text-zinc-500 uppercase tracking-wider text-[10px]">DAC Engine</span>
+            <span id="chipWorkMode" class="font-bold text-cyan-400">STD (Standard)</span>
+          </div>
+          <div class="flex items-center space-x-2 bg-zinc-900/60 px-3.5 py-1.5 rounded-lg border border-white/5">
+            <span class="text-zinc-500 uppercase tracking-wider text-[10px]">Output</span>
+            <span id="chipOutMode" class="font-bold text-emerald-400">PO (3.5/4.4)</span>
+          </div>
+        </div>
+
+        <!-- Right: Connect Button & Connection Badge -->
+        <div class="flex items-center space-x-3">
+          <div id="connStatusBadge" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-mono">
+            <span class="w-2 h-2 rounded-full bg-red-500 led-glow"></span>
+            <span id="connStatusText">Disconnected</span>
+          </div>
+
+          <button id="btnConnect" class="group relative inline-flex items-center gap-3 px-5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold text-xs tracking-wider uppercase shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.45)] transition-all duration-300 active:scale-[0.97]">
+            <span id="btnConnectLabel">Connect RU3</span>
+            <div class="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">
+              <svg class="w-3 h-3 text-black stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M7 17L17 7M17 7H7M17 7V17" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- ── MAIN CONTENT GRID ── -->
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- ═══════════════════════════════════════════════════
+           LEFT / TOP: 10-BAND INTERACTIVE PEQ SUITE (8 COLS)
+           ═══════════════════════════════════════════════════ -->
+      <section class="lg:col-span-8 space-y-6">
+
+        <!-- 1. INTERACTIVE FREQUENCY RESPONSE GRAPH CARD -->
+        <div class="double-bezel rounded-2xl p-1.5">
+          <div class="inner-core rounded-[calc(1rem-0.125rem)] p-5 space-y-4">
+            
+            <!-- Graph Header -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b]"></span>
+                <h2 class="font-display font-bold text-sm tracking-wide text-zinc-100 uppercase">
+                  Frequency Response Curve
+                </h2>
+                <span class="text-[10px] font-mono text-zinc-500 bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                  10-Band Biquad IIR Math Engine
+                </span>
+              </div>
+
+              <!-- Master PEQ Switch & Preamp Headroom -->
+              <div class="flex items-center space-x-4">
+                <!-- Preamp Headroom -->
+                <div class="flex items-center space-x-2 bg-zinc-900 px-3 py-1 rounded-lg border border-white/5">
+                  <span class="text-[11px] font-mono text-zinc-400">Preamp:</span>
+                  <span id="valGlobalGain" class="text-xs font-mono font-bold text-amber-400">0.0 dB</span>
+                  <input id="sliderGlobalGain" type="range" min="-12" max="0" step="0.5" value="0" class="w-20 accent-amber-500">
+                </div>
+
+                <!-- Master Toggle -->
+                <button id="btnMasterPeqToggle" class="px-3 py-1 rounded-lg text-xs font-mono font-bold tracking-wider uppercase border transition-all duration-300 flex items-center gap-2 bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]">
+                  <span class="w-2 h-2 rounded-full bg-amber-400 led-glow"></span>
+                  <span id="lblMasterPeq">PEQ ACTIVE</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full h-[260px] sm:h-[320px] bg-[#07080c] rounded-xl border border-white/5 overflow-hidden shadow-inner cursor-crosshair group select-none" id="graphContainer">
+              <canvas id="peqCanvas" class="w-full h-full block"></canvas>
+              
+              <!-- Cursor Hover Tooltip -->
+              <div id="graphTooltip" class="absolute pointer-events-none opacity-0 transition-opacity duration-150 bg-zinc-900/90 backdrop-blur-md border border-amber-500/30 text-zinc-200 text-[11px] font-mono px-2.5 py-1.5 rounded-lg shadow-xl -translate-x-1/2 -translate-y-full -mt-2.5 whitespace-nowrap z-20">
+                <span id="tooltipContent">200 Hz • 0.0 dB • Q 1.41</span>
+              </div>
+            </div>
+
+            <!-- Graph Legend / Frequency Markers -->
+            <div class="flex items-center justify-between text-[10px] font-mono text-zinc-500 px-2 select-none">
+              <span>20 Hz</span>
+              <span>50 Hz</span>
+              <span>100 Hz</span>
+              <span>250 Hz</span>
+              <span>500 Hz</span>
+              <span>1 kHz</span>
+              <span>2 kHz</span>
+              <span>5 kHz</span>
+              <span>10 kHz</span>
+              <span>20 kHz</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 2. 10-BAND QUICK-CHIPS & SELECTOR -->
+        <div class="double-bezel rounded-2xl p-1.5">
+          <div class="inner-core rounded-[calc(1rem-0.125rem)] p-4 space-y-4">
+            
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono uppercase text-zinc-400 tracking-wider font-semibold">Band Strip Matrix</span>
+              <span class="text-[11px] font-mono text-amber-400/80">Click band chip to edit details below</span>
+            </div>
+
+            <!-- 10 Band Chips -->
+            <div class="grid grid-cols-5 sm:grid-cols-10 gap-2 select-none" id="bandChipsContainer"></div>
+
+            <!-- ACTIVE BAND DETAILED EDITOR BAR -->
+            <div class="bg-[#090b10] p-4 rounded-xl border border-white/5 space-y-4 transition-all duration-300" id="activeBandEditor">
+              
+              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-3">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center font-mono font-bold text-sm text-amber-400" id="editorBandId">
+                    B1
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold text-zinc-100 uppercase tracking-wider" id="editorBandTitle">Band 1 Parameters</h3>
+                    <p class="text-[10px] font-mono text-zinc-400" id="editorBandSub">Peak Filter • Active</p>
+                  </div>
+                </div>
+
+                <!-- Filter Type Dropdown -->
+                <div class="flex items-center space-x-2">
+                  <span class="text-[11px] font-mono text-zinc-500">Filter Type:</span>
+                  <select id="selFilterType" class="bg-zinc-900 border border-white/10 text-amber-400 text-xs font-mono rounded-lg px-2.5 py-1 focus:outline-none focus:border-amber-500/50 cursor-pointer">
+                    <option value="PEAK">Peak (Bell)</option>
+                    <option value="LOW_SHELF">Low Shelf</option>
+                    <option value="HIGH_SHELF">High Shelf</option>
+                    <option value="LOW_PASS">Low Pass (LPF)</option>
+                    <option value="HIGH_PASS">High Pass (HPF)</option>
+                    <option value="BAND_PASS">Band Pass (BPF)</option>
+                    <option value="NOTCH">Notch</option>
+                    <option value="ALL_PASS">All Pass</option>
+                  </select>
+
+                  <!-- Band Enable Toggle -->
+                  <button id="btnBandBypass" class="px-3 py-1 rounded-lg text-xs font-mono border transition-all duration-200 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                    ENABLED
+                  </button>
+                </div>
+              </div>
+
+              <!-- 3 Controls: Frequency, Gain, Q-Factor -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5 pt-1">
+                
+                <!-- Frequency Slider + Input -->
+                <div class="bg-zinc-900/50 p-3 rounded-lg border border-white/5 space-y-2">
+                  <div class="flex justify-between items-center text-xs font-mono">
+                    <span class="text-zinc-400">Frequency (Hz)</span>
+                    <input id="numFreq" type="number" min="20" max="20000" step="1" value="31" class="w-20 bg-zinc-800 border border-white/10 text-amber-400 text-right px-2 py-0.5 rounded focus:outline-none focus:border-amber-500/50">
+                  </div>
+                  <input id="sliderFreq" type="range" min="20" max="20000" step="1" value="31" class="w-full">
+                </div>
+
+                <!-- Gain Slider + Input -->
+                <div class="bg-zinc-900/50 p-3 rounded-lg border border-white/5 space-y-2">
+                  <div class="flex justify-between items-center text-xs font-mono">
+                    <span class="text-zinc-400">Gain (dB)</span>
+                    <input id="numGain" type="number" min="-12" max="12" step="0.1" value="0.0" class="w-20 bg-zinc-800 border border-white/10 text-amber-400 text-right px-2 py-0.5 rounded focus:outline-none focus:border-amber-500/50">
+                  </div>
+                  <input id="sliderGain" type="range" min="-12" max="12" step="0.1" value="0.0" class="w-full">
+                </div>
+
+                <!-- Q-Factor Slider + Input -->
+                <div class="bg-zinc-900/50 p-3 rounded-lg border border-white/5 space-y-2">
+                  <div class="flex justify-between items-center text-xs font-mono">
+                    <span class="text-zinc-400">Q-Factor (Width)</span>
+                    <input id="numQ" type="number" min="0.1" max="10.0" step="0.05" value="1.41" class="w-20 bg-zinc-800 border border-white/10 text-amber-400 text-right px-2 py-0.5 rounded focus:outline-none focus:border-amber-500/50">
+                  </div>
+                  <input id="sliderQ" type="range" min="0.1" max="10.0" step="0.05" value="1.41" class="w-full">
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 3. PRESETS GALLERY & AUTOEQ IMPORT DECK -->
+        <div class="double-bezel rounded-2xl p-1.5">
+          <div class="inner-core rounded-[calc(1rem-0.125rem)] p-5 space-y-4">
+            
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center space-x-2">
+                <span class="text-amber-400">✦</span>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-200">Factory & Audiophile Presets</h3>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button id="btnOpenAutoEq" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-white/10 hover:border-amber-500/30 text-xs font-mono text-amber-300 transition-all flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                  </svg>
+                  Import AutoEQ / Peace
+                </button>
+              </div>
+            </div>
+
+            <!-- Presets Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 select-none" id="presetsGrid"></div>
+
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- ═══════════════════════════════════════════════════
+           RIGHT / SIDEBAR: HARDWARE & VOLUME DECK (4 COLS)
+           ═══════════════════════════════════════════════════ -->
+      <aside class="lg:col-span-4 space-y-6">
+
+        <!-- 1. 32-BIT HARDWARE VOLUME CONTROLLER -->
+        <div class="double-bezel rounded-2xl p-1.5">
+          <div class="inner-core rounded-[calc(1rem-0.125rem)] p-5 space-y-5">
+            
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]"></span>
+                <h3 class="text-xs font-display font-bold uppercase tracking-wider text-zinc-100">32-Bit Hardware Volume</h3>
+              </div>
+              <button id="btnMute" class="px-2.5 py-1 rounded bg-zinc-900 border border-white/5 text-[11px] font-mono text-zinc-400 hover:text-red-400 hover:border-red-500/30 transition-all">
+                MUTE
+              </button>
+            </div>
+
+            <!-- Big Volume Display -->
+            <div class="text-center py-2">
+              <div class="font-display font-black text-5xl tracking-tight bg-gradient-to-b from-white via-zinc-100 to-amber-300 bg-clip-text text-transparent" id="lblVolume">
+                45
+              </div>
+              <p class="text-[11px] font-mono text-zinc-500 mt-1 uppercase tracking-widest" id="lblVolSub">
+                ESS Hardware Attenuation: -27.5 dB
+              </p>
+            </div>
+
+            <!-- Stepper + Slider -->
+            <div class="space-y-3">
+              <div class="flex items-center space-x-3">
+                <button id="btnVolDown" class="w-9 h-9 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/10 active:scale-95 flex items-center justify-center text-zinc-300 font-mono font-bold text-base transition-all">
+                  −
+                </button>
+                <input id="sliderVolume" type="range" min="0" max="100" value="45" class="flex-1 accent-amber-500">
+                <button id="btnVolUp" class="w-9 h-9 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/10 active:scale-95 flex items-center justify-center text-zinc-300 font-mono font-bold text-base transition-all">
+                  +
+                </button>
+              </div>
+            </div>
+
+            <!-- Volume Guard & Channel Balance -->
+            <div class="border-t border-white/5 pt-4 space-y-3.5 text-xs font-mono">
+              <!-- Max Volume Guard -->
+              <div class="flex items-center justify-between">
+                <span class="text-zinc-400">Ear Safety Guard Limit:</span>
+                <select id="selMaxVolLimit" class="bg-zinc-900 border border-white/10 text-amber-400 text-xs font-mono rounded px-2 py-0.5 focus:outline-none">
+                  <option value="100">100 (Uncapped)</option>
+                  <option value="85" selected>85 (Recommended)</option>
+                  <option value="70">70 (High Sensitivity IEM)</option>
+                  <option value="60">60 (Strict Guard)</option>
+                </select>
+              </div>
+
+              <!-- Channel Balance -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-zinc-400 text-[11px]">
+                  <span>Channel Balance (L / R)</span>
+                  <span id="lblBalance" class="text-amber-400 font-bold">Center (0.0)</span>
+                </div>
+                <input id="sliderBalance" type="range" min="-10" max="10" step="0.5" value="0" class="w-full">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 2. DAC HARDWARE ARCHITECTURE CONTROLS -->
+        <div class="double-bezel rounded-2xl p-1.5">
+          <div class="inner-core rounded-[calc(1rem-0.125rem)] p-5 space-y-4">
+            
+            <div class="flex items-center space-x-2 border-b border-white/5 pb-3">
+              <span class="text-cyan-400">✦</span>
+              <h3 class="text-xs font-display font-bold uppercase tracking-wider text-zinc-100">DAC Architecture Settings</h3>
+            </div>
+
+            <div class="space-y-4 text-xs font-mono">
+              
+              <!-- Output Mode (PO vs LO) -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-zinc-400">
+                  <span>Output Mode:</span>
+                  <span class="text-[10px] text-zinc-500" id="loWarning">PO enables Volume, LO is fixed full line</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button id="btnModePO" class="py-2 rounded-lg font-bold border transition-all bg-emerald-500/10 text-emerald-400 border-emerald-500/40">
+                    PO (Headphones)
+                  </button>
+                  <button id="btnModeLO" class="py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5 hover:border-white/20">
+                    LO (Line Out)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Work Mode (STD vs HYP) -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-zinc-400">
+                  <span>Work Mode (Power):</span>
+                  <span class="text-[10px] text-amber-500/80">HYP gives maximum headroom</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button id="btnWorkSTD" class="py-2 rounded-lg font-bold border transition-all bg-amber-500/10 text-amber-400 border-amber-500/40">
+                    STD (Standard)
+                  </button>
+                  <button id="btnWorkHYP" class="py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5 hover:border-white/20">
+                    HYP (Hyper Turbo)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Gain Level (Low vs High) -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-zinc-400">
+                  <span>Hardware Gain Level:</span>
+                  <span class="text-[10px] text-zinc-500">IEM vs Hard-to-drive Planar</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button id="btnGainLow" class="py-2 rounded-lg font-bold border transition-all bg-cyan-500/10 text-cyan-400 border-cyan-500/40">
+                    Low Gain
+                  </button>
+                  <button id="btnGainHigh" class="py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5 hover:border-white/20">
+                    High Gain
+                  </button>
+                </div>
+              </div>
+
+              <!-- ESS PCM Digital Filters (7 Types) -->
+              <div class="space-y-1.5 pt-1">
+                <label class="text-zinc-400 block text-xs">PCM Digital Filter (ESS ES9069Q):</label>
+                <select id="selPcmFilter" class="w-full bg-zinc-900 border border-white/10 text-zinc-200 text-xs font-mono rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 cursor-pointer">
+                  <option value="1">1. Linear Phase Rapid Roll-Off (Low Ripple)</option>
+                  <option value="2">2. Linear Phase Rapid Roll-Off</option>
+                  <option value="3">3. Linear Phase Slow Roll-Off</option>
+                  <option value="4">4. Minimum Phase Rapid Roll-Off (Low Dispersion)</option>
+                  <option value="5">5. Minimum Phase Rapid Roll-Off</option>
+                  <option value="6">6. Minimum Phase Slow Roll-Off</option>
+                  <option value="7">7. Minimum Phase</option>
+                </select>
+                <p id="pcmFilterDesc" class="text-[10px] text-zinc-500 pt-0.5 leading-relaxed">
+                  Default ESS studio filter with pristine linear phase response and ultra-low passband ripple.
+                </p>
+              </div>
+
+              <!-- Screen Timeout -->
+              <div class="space-y-1.5 pt-1">
+                <label class="text-zinc-400 block text-xs">OLED Screen Sleep Timeout:</label>
+                <select id="selScreenTimeout" class="w-full bg-zinc-900 border border-white/10 text-zinc-200 text-xs font-mono rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/50 cursor-pointer">
+                  <option value="15">15 Seconds</option>
+                  <option value="30">30 Seconds</option>
+                  <option value="60" selected>60 Seconds (Default)</option>
+                  <option value="120">120 Seconds</option>
+                  <option value="0">Never / Always On</option>
+                </select>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 3. REAL-TIME LOG & SYNC MONITOR -->
+        <div class="double-bezel rounded-2xl p-1.5">
+          <div class="inner-core rounded-[calc(1rem-0.125rem)] p-4 space-y-2.5">
+            <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+              <span>Hardware Sync Log</span>
+              <button id="btnClearLog" class="text-zinc-600 hover:text-zinc-400">Clear</button>
+            </div>
+            <div id="logBox" class="h-28 overflow-y-auto font-mono text-[10px] leading-relaxed text-zinc-400 bg-black/40 p-2.5 rounded-lg border border-white/5 space-y-1">
+              <div class="text-amber-500/80">● System initialized. Ready to connect Cayin RU3.</div>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+    </main>
+
+    <!-- ── FOOTER ── -->
+    <footer class="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-zinc-500">
+      <div>
+        Cayin RU3 High-End PEQ Web Controller • Powered by WebHID & WebUSB
+      </div>
+      <div class="flex items-center space-x-4">
+        <span>ESS ES9069Q 32-Bit DAC</span>
+        <span>•</span>
+        <span>10-Band Biquad Filter Engine</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       MODAL: AUTOEQ & SQUIGLINK PROFILE IMPORT
+       ══════════════════════════════════════════════════════ -->
+  <div id="modalAutoEq" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="double-bezel rounded-3xl p-1.5 w-full max-w-xl shadow-2xl">
+      <div class="inner-core rounded-[calc(1.5rem-0.125rem)] p-6 space-y-5">
+        
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              ⚡
+            </div>
+            <div>
+              <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-100">Import AutoEQ / Peace EQ</h3>
+              <p class="text-[11px] font-mono text-zinc-400">Paste parametric equalizer text from AutoEq, crinacle, or squig.link</p>
+            </div>
+          </div>
+          <button id="btnCloseAutoEq" class="w-8 h-8 rounded-lg bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white flex items-center justify-center font-mono">
+            ✕
+          </button>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-xs font-mono text-zinc-400 block">Parametric EQ Text Output:</label>
+          <textarea id="txtAutoEqInput" rows="7" placeholder="Filter 1: ON PK Fc 25 Hz Gain 4.5 dB Q 1.41&#10;Filter 2: ON PK Fc 105 Hz Gain -2.0 dB Q 0.70&#10;Filter 3: ON PK Fc 3200 Hz Gain 3.5 dB Q 2.00&#10;..." class="w-full bg-black/50 border border-white/10 text-amber-300 font-mono text-xs p-3 rounded-xl focus:outline-none focus:border-amber-500/50 resize-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+          <span class="text-[11px] font-mono text-zinc-500">Supports standard PK, LSC, HSC, LPF, HPF</span>
+          <div class="flex items-center space-x-3">
+            <button id="btnApplyAutoEq" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold font-mono text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all">
+              Apply to 10 Bands
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       CORE JAVASCRIPT: RU3 PEQ & DAC ENGINE
+       ══════════════════════════════════════════════════════ -->
+  <script>
+    const DEFAULT_FREQS = [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+
+    const state = {
+      connected: false,
+      device: null,
+      masterPeqEnabled: true,
+      globalGain: 0.0,
+      activeBandIndex: 0,
+      
+      bands: Array.from({ length: 10 }, (_, i) => ({
+        id: i + 1,
+        enabled: true,
+        type: 'PEAK',
+        freq: DEFAULT_FREQS[i],
+        gain: 0.0,
+        q: 1.414,
+      })),
+
+      volume: 45,
+      isMuted: false,
+      maxVolLimit: 85,
+      balance: 0.0,
+      outputMode: 'PO',
+      workMode: 'STD',
+      gainLevel: 'LOW',
+      pcmFilter: 1,
+      screenTimeout: 60,
+    };
+
+    const PRESETS = [
+      { id: 'flat', name: 'Flat / Studio', tag: 'Neutral Reference', gains: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], preamp: 0.0 },
+      { id: 'jazz', name: 'Jazz & Acoustic', tag: 'Warm & Silky', gains: [1.5, 2.0, 1.2, 0.0, -0.5, 0.8, 1.2, 2.0, 1.5, 2.2], preamp: -2.2 },
+      { id: 'classical', name: 'Classical', tag: 'Spacious & Pure', gains: [2.0, 1.0, 0.0, -0.5, 0.0, 0.5, 1.0, 1.8, 2.2, 2.8], preamp: -2.8 },
+      { id: 'pop', name: 'Pop Vocal', tag: 'Punchy & Clear', gains: [2.5, 3.2, 1.0, -1.0, 0.0, 1.5, 3.0, 2.5, 2.0, 1.8], preamp: -3.2 },
+      { id: 'rock', name: 'Rock Dynamic', tag: 'V-Shape Punch', gains: [4.0, 3.0, 1.5, -0.5, -1.2, 0.5, 2.0, 3.5, 4.0, 3.8], preamp: -4.0 },
+      { id: 'dance', name: 'Dance / EDM', tag: 'Sub-Bass Boost', gains: [5.5, 4.5, 2.0, 0.0, -1.0, 0.0, 1.5, 3.0, 4.5, 5.0], preamp: -5.5 },
+      { id: 'hiphop', name: 'Hip-Hop & R&B', tag: 'Deep Grooves', gains: [6.0, 4.8, 2.5, 0.5, -0.5, 0.0, 1.2, 2.0, 3.0, 3.5], preamp: -6.0 },
+      { id: 'vocal', name: 'Vocal Presence', tag: 'Forward Voices', gains: [-2.0, -1.0, 0.0, 1.0, 2.2, 3.5, 3.2, 2.0, 1.0, 0.5], preamp: -3.5 },
+      { id: 'bass_boost', name: 'Bass Impact', tag: 'Heavy Low-End', gains: [6.5, 5.0, 3.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], preamp: -6.5 },
+      { id: 'treble_sparkle', name: 'Treble Air', tag: 'Crystalline Top', gains: [0.0, 0.0, 0.0, 0.0, 0.0, 0.8, 1.8, 3.2, 4.5, 5.5], preamp: -5.5 }
+    ];
+
+    function calculateBiquadResponse(type, f0, gainDb, Q, fs = 48000, evalFreq = 1000) {
+      if (f0 <= 0 || evalFreq <= 0 || Q <= 0) return 0;
+      const A = Math.pow(10, gainDb / 40);
+      const w0 = 2 * Math.PI * f0 / fs;
+      const cos_w0 = Math.cos(w0);
+      const sin_w0 = Math.sin(w0);
+      const alpha = sin_w0 / (2 * Q);
+
+      let b0 = 1, b1 = 0, b2 = 0, a0 = 1, a1 = 0, a2 = 0;
+
+      switch (type) {
+        case 'PEAK':
+          b0 = 1 + alpha * A; b1 = -2 * cos_w0; b2 = 1 - alpha * A;
+          a0 = 1 + alpha / A; a1 = -2 * cos_w0; a2 = 1 - alpha / A;
+          break;
+        case 'LOW_SHELF':
+          const sqrtA2 = 2 * Math.sqrt(A) * alpha;
+          b0 = A * ((A + 1) - (A - 1) * cos_w0 + sqrtA2);
+          b1 = 2 * A * ((A - 1) - (A + 1) * cos_w0);
+          b2 = A * ((A + 1) - (A - 1) * cos_w0 - sqrtA2);
+          a0 = (A + 1) + (A - 1) * cos_w0 + sqrtA2;
+          a1 = -2 * ((A - 1) + (A + 1) * cos_w0);
+          a2 = (A + 1) - (A - 1) * cos_w0 - sqrtA2;
+          break;
+        case 'HIGH_SHELF':
+          const sqrtA_h = 2 * Math.sqrt(A) * alpha;
+          b0 = A * ((A + 1) + (A - 1) * cos_w0 + sqrtA_h);
+          b1 = -2 * A * ((A - 1) + (A + 1) * cos_w0);
+          b2 = A * ((A + 1) - (A - 1) * cos_w0 - sqrtA_h);
+          a0 = (A + 1) - (A - 1) * cos_w0 + sqrtA_h;
+          a1 = 2 * ((A - 1) + (A + 1) * cos_w0);
+          a2 = (A + 1) - (A - 1) * cos_w0 - sqrtA_h;
+          break;
+        case 'LOW_PASS':
+          b0 = (1 - cos_w0) / 2; b1 = 1 - cos_w0; b2 = (1 - cos_w0) / 2;
+          a0 = 1 + alpha; a1 = -2 * cos_w0; a2 = 1 - alpha;
+          break;
+        case 'HIGH_PASS':
+          b0 = (1 + cos_w0) / 2; b1 = -(1 + cos_w0); b2 = (1 + cos_w0) / 2;
+          a0 = 1 + alpha; a1 = -2 * cos_w0; a2 = 1 - alpha;
+          break;
+        case 'BAND_PASS':
+          b0 = alpha; b1 = 0; b2 = -alpha;
+          a0 = 1 + alpha; a1 = -2 * cos_w0; a2 = 1 - alpha;
+          break;
+        case 'NOTCH':
+          b0 = 1; b1 = -2 * cos_w0; b2 = 1;
+          a0 = 1 + alpha; a1 = -2 * cos_w0; a2 = 1 - alpha;
+          break;
+        case 'ALL_PASS':
+          b0 = 1 - alpha; b1 = -2 * cos_w0; b2 = 1 + alpha;
+          a0 = 1 + alpha; a1 = -2 * cos_w0; a2 = 1 - alpha;
+          break;
+        default:
+          return 0;
+      }
+
+      b0 /= a0; b1 /= a0; b2 /= a0;
+      a1 /= a0; a2 /= a0;
+
+      const w = 2 * Math.PI * evalFreq / fs;
+      const cos_w = Math.cos(w);
+      const sin_w = Math.sin(w);
+      const cos_2w = Math.cos(2 * w);
+      const sin_2w = Math.sin(2 * w);
+
+      const num_re = b0 + b1 * cos_w + b2 * cos_2w;
+      const num_im = -b1 * sin_w - b2 * sin_2w;
+      const den_re = 1 + a1 * cos_w + a2 * cos_2w;
+      const den_im = -a1 * sin_w - a2 * sin_2w;
+
+      const num_sq = num_re * num_re + num_im * num_im;
+      const den_sq = den_re * den_re + den_im * den_im;
+
+      if (den_sq <= 0) return 0;
+      const mag = Math.sqrt(num_sq / den_sq);
+      return 20 * Math.log10(Math.max(mag, 1e-6));
+    }
+
+    const canvas = document.getElementById('peqCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDraggingNode = false;
+    let draggedNodeIndex = -1;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      renderCurve();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function freqToX(f, width) {
+      const minLog = Math.log10(20);
+      const maxLog = Math.log10(20000);
+      const curLog = Math.log10(Math.max(20, Math.min(20000, f)));
+      return ((curLog - minLog) / (maxLog - minLog)) * width;
+    }
+
+    function xToFreq(x, width) {
+      const minLog = Math.log10(20);
+      const maxLog = Math.log10(20000);
+      const curLog = minLog + (x / width) * (maxLog - minLog);
+      return Math.pow(10, curLog);
+    }
+
+    function gainToY(g, height) {
+      const minGain = -15;
+      const maxGain = 15;
+      return height - ((g - minGain) / (maxGain - minGain)) * height;
+    }
+
+    function yToGain(y, height) {
+      const minGain = -15;
+      const maxGain = 15;
+      return maxGain - (y / height) * (maxGain - minGain);
+    }
+
+    function renderCurve() {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      if (!w || !h) return;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Grid Lines
+      ctx.lineWidth = 1;
+      const gridFreqs = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+      gridFreqs.forEach(f => {
+        const x = freqToX(f, w);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      });
+
+      const gridGains = [-12, -9, -6, -3, 0, 3, 6, 9, 12];
+      gridGains.forEach(g => {
+        const y = gainToY(g, h);
+        ctx.strokeStyle = (g === 0) ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.04)';
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+
+        ctx.fillStyle = (g === 0) ? 'rgba(245, 158, 11, 0.6)' : 'rgba(255, 255, 255, 0.2)';
+        ctx.font = '9px "JetBrains Mono"';
+        ctx.fillText(`${g > 0 ? '+' : ''}${g}dB`, 8, y - 3);
+      });
+
+      if (!state.masterPeqEnabled) {
+        const y0 = gainToY(0, h);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, y0);
+        ctx.lineTo(w, y0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        return;
+      }
+
+      // Compute Master Curve
+      const steps = Math.floor(w);
+      const curvePoints = [];
+
+      for (let i = 0; i <= steps; i++) {
+        const freq = xToFreq(i, w);
+        let totalGain = state.globalGain;
+
+        state.bands.forEach(band => {
+          if (band.enabled) {
+            totalGain += calculateBiquadResponse(band.type, band.freq, band.gain, band.q, 48000, freq);
+          }
+        });
+
+        const y = gainToY(totalGain, h);
+        curvePoints.push({ x: i, y: y });
+      }
+
+      // Ambient Gradient Fill
+      ctx.beginPath();
+      ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
+      for (let i = 1; i < curvePoints.length; i++) {
+        ctx.lineTo(curvePoints[i].x, curvePoints[i].y);
+      }
+      ctx.lineTo(w, gainToY(0, h));
+      ctx.lineTo(0, gainToY(0, h));
+      ctx.closePath();
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, h);
+      gradient.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
+      gradient.addColorStop(0.5, 'rgba(6, 182, 212, 0.08)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Main Laser Line
+      ctx.beginPath();
+      ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
+      for (let i = 1; i < curvePoints.length; i++) {
+        ctx.lineTo(curvePoints[i].x, curvePoints[i].y);
+      }
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 12;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Draw Interactive Band Nodes
+      state.bands.forEach((band, idx) => {
+        const nx = freqToX(band.freq, w);
+        const ny = gainToY(band.gain + state.globalGain, h);
+        const isSelected = (idx === state.activeBandIndex);
+
+        ctx.beginPath();
+        ctx.arc(nx, ny, isSelected ? 9 : 6, 0, Math.PI * 2);
+        ctx.fillStyle = band.enabled 
+          ? (isSelected ? '#ffffff' : '#f59e0b') 
+          : 'rgba(100, 100, 100, 0.6)';
+        ctx.shadowColor = isSelected ? '#ffffff' : '#f59e0b';
+        ctx.shadowBlur = isSelected ? 16 : 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.beginPath();
+        ctx.arc(nx, ny, isSelected ? 4 : 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#06070a';
+        ctx.fill();
+
+        ctx.fillStyle = isSelected ? '#fbbf24' : 'rgba(255, 255, 255, 0.7)';
+        ctx.font = isSelected ? 'bold 10px "JetBrains Mono"' : '9px "JetBrains Mono"';
+        ctx.textAlign = 'center';
+        ctx.fillText(`B${band.id}`, nx, ny - (isSelected ? 14 : 10));
+      });
+    }
+
+    const container = document.getElementById('graphContainer');
+    const tooltip = document.getElementById('graphTooltip');
+    const tooltipContent = document.getElementById('tooltipContent');
+
+    function getPointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: Math.max(0, Math.min(rect.width, clientX - rect.left)),
+        y: Math.max(0, Math.min(rect.height, clientY - rect.top)),
+        rect
+      };
+    }
+
+    container.addEventListener('mousedown', (e) => {
+      const pos = getPointerPos(e);
+      let foundIndex = -1;
+      let minDistance = 22;
+
+      state.bands.forEach((b, idx) => {
+        const nx = freqToX(b.freq, pos.rect.width);
+        const ny = gainToY(b.gain + state.globalGain, pos.rect.height);
+        const dist = Math.hypot(pos.x - nx, pos.y - ny);
+        if (dist < minDistance) {
+          minDistance = dist;
+          foundIndex = idx;
+        }
+      });
+
+      if (foundIndex !== -1) {
+        isDraggingNode = true;
+        draggedNodeIndex = foundIndex;
+        selectBand(foundIndex);
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      const pos = getPointerPos(e);
+      
+      if (isDraggingNode && draggedNodeIndex !== -1) {
+        const b = state.bands[draggedNodeIndex];
+        const newFreq = Math.round(xToFreq(pos.x, pos.rect.width));
+        const newGain = parseFloat(Math.max(-12, Math.min(12, yToGain(pos.y, pos.rect.height) - state.globalGain)).toFixed(1));
+        
+        b.freq = Math.max(20, Math.min(20000, newFreq));
+        b.gain = newGain;
+
+        updateActiveBandUI();
+        renderCurve();
+        scheduleDeviceSync();
+      }
+
+      if (e.target === canvas || isDraggingNode) {
+        const hoverFreq = Math.round(xToFreq(pos.x, pos.rect.width));
+        const hoverGain = yToGain(pos.y, pos.rect.height).toFixed(1);
+        
+        tooltip.style.left = `${pos.x}px`;
+        tooltip.style.top = `${pos.y}px`;
+        tooltip.style.opacity = '1';
+
+        if (isDraggingNode) {
+          const b = state.bands[draggedNodeIndex];
+          tooltipContent.textContent = `B${b.id}: ${b.freq} Hz • ${b.gain > 0 ? '+' : ''}${b.gain} dB • Q ${b.q}`;
+        } else {
+          tooltipContent.textContent = `${hoverFreq} Hz • ${hoverGain > 0 ? '+' : ''}${hoverGain} dB`;
+        }
+      } else {
+        tooltip.style.opacity = '0';
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDraggingNode) {
+        isDraggingNode = false;
+        draggedNodeIndex = -1;
+      }
+    });
+
+    function renderBandChips() {
+      const container = document.getElementById('bandChipsContainer');
+      container.innerHTML = '';
+
+      state.bands.forEach((band, idx) => {
+        const isSelected = (idx === state.activeBandIndex);
+        const chip = document.createElement('div');
+        chip.className = `p-2.5 rounded-xl border text-center cursor-pointer transition-all duration-200 ${
+          isSelected 
+            ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.2)]' 
+            : 'bg-zinc-900/60 border-white/5 hover:border-white/20 hover:bg-zinc-800/60'
+        }`;
+
+        chip.innerHTML = `
+          <div class="flex items-center justify-between text-[10px] font-mono mb-1">
+            <span class="font-bold ${isSelected ? 'text-amber-400' : 'text-zinc-400'}">B${band.id}</span>
+            <span class="w-1.5 h-1.5 rounded-full ${band.enabled ? 'bg-emerald-400' : 'bg-zinc-600'}"></span>
+          </div>
+          <div class="text-[11px] font-mono font-bold ${band.gain !== 0 ? 'text-amber-300' : 'text-zinc-500'}">
+            ${band.gain > 0 ? '+' : ''}${band.gain}dB
+          </div>
+          <div class="text-[9px] font-mono text-zinc-500 truncate mt-0.5">
+            ${band.freq >= 1000 ? (band.freq/1000).toFixed(1)+'k' : band.freq}Hz
+          </div>
+        `;
+
+        chip.addEventListener('click', () => selectBand(idx));
+        container.appendChild(chip);
+      });
+    }
+
+    function selectBand(index) {
+      state.activeBandIndex = index;
+      renderBandChips();
+      updateActiveBandUI();
+      renderCurve();
+    }
+
+    function updateActiveBandUI() {
+      const band = state.bands[state.activeBandIndex];
+      document.getElementById('editorBandId').textContent = `B${band.id}`;
+      document.getElementById('editorBandTitle').textContent = `Band ${band.id} Parameters`;
+      document.getElementById('editorBandSub').textContent = `${band.type} Filter • ${band.enabled ? 'Active' : 'Bypassed'}`;
+
+      document.getElementById('selFilterType').value = band.type;
+      
+      const btnBypass = document.getElementById('btnBandBypass');
+      btnBypass.textContent = band.enabled ? 'ENABLED' : 'BYPASSED';
+      btnBypass.className = band.enabled 
+        ? 'px-3 py-1 rounded-lg text-xs font-mono border transition-all bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+        : 'px-3 py-1 rounded-lg text-xs font-mono border transition-all bg-zinc-800 text-zinc-500 border-white/5';
+
+      document.getElementById('numFreq').value = band.freq;
+      document.getElementById('sliderFreq').value = band.freq;
+
+      document.getElementById('numGain').value = band.gain;
+      document.getElementById('sliderGain').value = band.gain;
+
+      document.getElementById('numQ').value = band.q;
+      document.getElementById('sliderQ').value = band.q;
+    }
+
+    document.getElementById('selFilterType').addEventListener('change', (e) => {
+      state.bands[state.activeBandIndex].type = e.target.value;
+      updateActiveBandUI();
+      renderCurve();
+      scheduleDeviceSync();
+    });
+
+    document.getElementById('btnBandBypass').addEventListener('click', () => {
+      const band = state.bands[state.activeBandIndex];
+      band.enabled = !band.enabled;
+      updateActiveBandUI();
+      renderBandChips();
+      renderCurve();
+      scheduleDeviceSync();
+    });
+
+    const numFreq = document.getElementById('numFreq');
+    const sliderFreq = document.getElementById('sliderFreq');
+    numFreq.addEventListener('input', (e) => {
+      const val = Math.max(20, Math.min(20000, Number(e.target.value) || 20));
+      state.bands[state.activeBandIndex].freq = val;
+      sliderFreq.value = val;
+      renderBandChips();
+      renderCurve();
+      scheduleDeviceSync();
+    });
+    sliderFreq.addEventListener('input', (e) => {
+      const val = Number(e.target.value);
+      state.bands[state.activeBandIndex].freq = val;
+      numFreq.value = val;
+      renderBandChips();
+      renderCurve();
+      scheduleDeviceSync();
+    });
+
+    const numGain = document.getElementById('numGain');
+    const sliderGain = document.getElementById('sliderGain');
+    numGain.addEventListener('input', (e) => {
+      const val = parseFloat(Math.max(-12, Math.min(12, Number(e.target.value) || 0)).toFixed(1));
+      state.bands[state.activeBandIndex].gain = val;
+      sliderGain.value = val;
+      renderBandChips();
+      renderCurve();
+      scheduleDeviceSync();
+    });
+    sliderGain.addEventListener('input', (e) => {
+      const val = parseFloat(Number(e.target.value).toFixed(1));
+      state.bands[state.activeBandIndex].gain = val;
+      numGain.value = val;
+      renderBandChips();
+      renderCurve();
+      scheduleDeviceSync();
+    });
+
+    const numQ = document.getElementById('numQ');
+    const sliderQ = document.getElementById('sliderQ');
+    numQ.addEventListener('input', (e) => {
+      const val = parseFloat(Math.max(0.1, Math.min(10.0, Number(e.target.value) || 1.41)).toFixed(2));
+      state.bands[state.activeBandIndex].q = val;
+      sliderQ.value = val;
+      renderCurve();
+      scheduleDeviceSync();
+    });
+    sliderQ.addEventListener('input', (e) => {
+      const val = parseFloat(Number(e.target.value).toFixed(2));
+      state.bands[state.activeBandIndex].q = val;
+      numQ.value = val;
+      renderCurve();
+      scheduleDeviceSync();
+    });
+
+    const sliderGlobalGain = document.getElementById('sliderGlobalGain');
+    const valGlobalGain = document.getElementById('valGlobalGain');
+    sliderGlobalGain.addEventListener('input', (e) => {
+      state.globalGain = parseFloat(Number(e.target.value).toFixed(1));
+      valGlobalGain.textContent = `${state.globalGain.toFixed(1)} dB`;
+      renderCurve();
+      scheduleDeviceSync();
+    });
+
+    const btnMaster = document.getElementById('btnMasterPeqToggle');
+    const lblMaster = document.getElementById('lblMasterPeq');
+    btnMaster.addEventListener('click', () => {
+      state.masterPeqEnabled = !state.masterPeqEnabled;
+      if (state.masterPeqEnabled) {
+        lblMaster.textContent = 'PEQ ACTIVE';
+        btnMaster.className = 'px-3 py-1 rounded-lg text-xs font-mono font-bold tracking-wider uppercase border transition-all duration-300 flex items-center gap-2 bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]';
+      } else {
+        lblMaster.textContent = 'BYPASSED';
+        btnMaster.className = 'px-3 py-1 rounded-lg text-xs font-mono font-bold tracking-wider uppercase border transition-all duration-300 flex items-center gap-2 bg-zinc-800 text-zinc-500 border-white/10';
+      }
+      renderCurve();
+      scheduleDeviceSync();
+      log(`Master PEQ set to ${state.masterPeqEnabled ? 'ACTIVE' : 'BYPASSED'}`);
+    });
+
+    function renderPresets() {
+      const grid = document.getElementById('presetsGrid');
+      grid.innerHTML = '';
+
+      PRESETS.forEach(preset => {
+        const card = document.createElement('button');
+        card.className = 'p-3 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-amber-500/30 text-left transition-all duration-200 group active:scale-[0.98]';
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-bold font-display text-zinc-200 group-hover:text-amber-300 transition-colors">${preset.name}</span>
+            <span class="text-[9px] font-mono text-zinc-500">Preset</span>
+          </div>
+          <p class="text-[10px] font-mono text-zinc-500 group-hover:text-zinc-400">${preset.tag}</p>
+        `;
+        card.addEventListener('click', () => applyPreset(preset));
+        grid.appendChild(card);
+      });
+    }
+
+    function applyPreset(preset) {
+      state.globalGain = preset.preamp || 0.0;
+      sliderGlobalGain.value = state.globalGain;
+      valGlobalGain.textContent = `${state.globalGain.toFixed(1)} dB`;
+
+      preset.gains.forEach((g, idx) => {
+        if (state.bands[idx]) {
+          state.bands[idx].gain = g;
+          state.bands[idx].type = 'PEAK';
+          state.bands[idx].q = 1.414;
+          state.bands[idx].enabled = true;
+        }
+      });
+
+      renderBandChips();
+      updateActiveBandUI();
+      renderCurve();
+      scheduleDeviceSync();
+      log(`Applied preset: ${preset.name} (Preamp: ${state.globalGain} dB)`);
+    }
+
+    const sliderVol = document.getElementById('sliderVolume');
+    const lblVol = document.getElementById('lblVolume');
+    const lblVolSub = document.getElementById('lblVolSub');
+    const btnVolDown = document.getElementById('btnVolDown');
+    const btnVolUp = document.getElementById('btnVolUp');
+    const btnMute = document.getElementById('btnMute');
+    const selMaxVol = document.getElementById('selMaxVolLimit');
+
+    function setVolume(val) {
+      if (state.outputMode === 'LO') {
+        log('Volume is locked in Line Out (LO) mode.', 'warn');
+        return;
+      }
+      const capped = Math.max(0, Math.min(state.maxVolLimit, val));
+      state.volume = capped;
+      sliderVol.value = capped;
+      lblVol.textContent = capped;
+      
+      const dbAtten = (capped === 0) ? '-∞' : ((capped - 100) * 0.5).toFixed(1);
+      lblVolSub.textContent = `ESS Hardware Attenuation: ${dbAtten} dB`;
+
+      scheduleDeviceSync();
+    }
+
+    sliderVol.addEventListener('input', (e) => setVolume(Number(e.target.value)));
+    btnVolDown.addEventListener('click', () => setVolume(state.volume - 1));
+    btnVolUp.addEventListener('click', () => setVolume(state.volume + 1));
+
+    btnMute.addEventListener('click', () => {
+      state.isMuted = !state.isMuted;
+      btnMute.className = state.isMuted 
+        ? 'px-2.5 py-1 rounded bg-red-500/20 border border-red-500/40 text-[11px] font-mono text-red-400 font-bold'
+        : 'px-2.5 py-1 rounded bg-zinc-900 border border-white/5 text-[11px] font-mono text-zinc-400 hover:text-red-400';
+      log(`Device ${state.isMuted ? 'MUTED' : 'UNMUTED'}`);
+      scheduleDeviceSync();
+    });
+
+    selMaxVol.addEventListener('change', (e) => {
+      state.maxVolLimit = Number(e.target.value);
+      if (state.volume > state.maxVolLimit) {
+        setVolume(state.maxVolLimit);
+      }
+      log(`Ear safety volume guard set to max ${state.maxVolLimit}`);
+    });
+
+    const sliderBalance = document.getElementById('sliderBalance');
+    const lblBalance = document.getElementById('lblBalance');
+    sliderBalance.addEventListener('input', (e) => {
+      const b = Number(e.target.value);
+      state.balance = b;
+      if (b === 0) lblBalance.textContent = 'Center (0.0)';
+      else if (b < 0) lblBalance.textContent = `L ${Math.abs(b).toFixed(1)} dB`;
+      else lblBalance.textContent = `R +${b.toFixed(1)} dB`;
+      scheduleDeviceSync();
+    });
+
+    const btnModePO = document.getElementById('btnModePO');
+    const btnModeLO = document.getElementById('btnModeLO');
+    const chipOutMode = document.getElementById('chipOutMode');
+
+    btnModePO.addEventListener('click', () => {
+      state.outputMode = 'PO';
+      btnModePO.className = 'py-2 rounded-lg font-bold border transition-all bg-emerald-500/10 text-emerald-400 border-emerald-500/40';
+      btnModeLO.className = 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5 hover:border-white/20';
+      chipOutMode.textContent = 'PO (3.5/4.4)';
+      chipOutMode.className = 'font-bold text-emerald-400';
+      sliderVol.disabled = false;
+      log('Output mode switched to PO (Headphone Output). Hardware volume enabled.');
+      scheduleDeviceSync();
+    });
+
+    btnModeLO.addEventListener('click', () => {
+      state.outputMode = 'LO';
+      btnModeLO.className = 'py-2 rounded-lg font-bold border transition-all bg-amber-500/10 text-amber-400 border-amber-500/40';
+      btnModePO.className = 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5 hover:border-white/20';
+      chipOutMode.textContent = 'LO (Line-Level)';
+      chipOutMode.className = 'font-bold text-amber-400';
+      sliderVol.disabled = true;
+      log('Output mode switched to LO (Line Out). Volume fixed to full scale line-level.', 'warn');
+      scheduleDeviceSync();
+    });
+
+    const btnWorkSTD = document.getElementById('btnWorkSTD');
+    const btnWorkHYP = document.getElementById('btnWorkHYP');
+    const chipWorkMode = document.getElementById('chipWorkMode');
+
+    btnWorkSTD.addEventListener('click', () => {
+      state.workMode = 'STD';
+      btnWorkSTD.className = 'py-2 rounded-lg font-bold border transition-all bg-amber-500/10 text-amber-400 border-amber-500/40';
+      btnWorkHYP.className = 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5 hover:border-white/20';
+      chipWorkMode.textContent = 'STD (Standard)';
+      log('Work mode set to STD (Standard power output).');
+      scheduleDeviceSync();
+    });
+
+    btnWorkHYP.addEventListener('click', () => {
+      state.workMode = 'HYP';
+      btnWorkHYP.className = 'py-2 rounded-lg font-bold border transition-all bg-purple-500/10 text-purple-400 border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.2)]';
+      btnWorkSTD.className = 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5 hover:border-white/20';
+      chipWorkMode.textContent = 'HYP (Hyper Turbo)';
+      log('Work mode set to HYP (Hyper turbo mode, enhanced voltage rails).');
+      scheduleDeviceSync();
+    });
+
+    const btnGainLow = document.getElementById('btnGainLow');
+    const btnGainHigh = document.getElementById('btnGainHigh');
+    btnGainLow.addEventListener('click', () => {
+      state.gainLevel = 'LOW';
+      btnGainLow.className = 'py-2 rounded-lg font-bold border transition-all bg-cyan-500/10 text-cyan-400 border-cyan-500/40';
+      btnGainHigh.className = 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5 hover:border-white/20';
+      log('Gain level set to LOW.');
+      scheduleDeviceSync();
+    });
+    btnGainHigh.addEventListener('click', () => {
+      state.gainLevel = 'HIGH';
+      btnGainHigh.className = 'py-2 rounded-lg font-bold border transition-all bg-amber-500/10 text-amber-400 border-amber-500/40';
+      btnGainLow.className = 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5 hover:border-white/20';
+      log('Gain level set to HIGH.');
+      scheduleDeviceSync();
+    });
+
+    const pcmFilterDescriptions = {
+      1: 'Linear Phase Rapid Roll-Off (Low Ripple) — Pure studio reference response with minimal ripple.',
+      2: 'Linear Phase Rapid Roll-Off — Crisp transients and extended high-frequency resolution.',
+      3: 'Linear Phase Slow Roll-Off — Natural acoustic roll-off with gentle phase characteristics.',
+      4: 'Minimum Phase Rapid Roll-Off (Low Dispersion) — Minimal pre-ringing for punchy percussive impact.',
+      5: 'Minimum Phase Rapid Roll-Off — Fast decay, zero pre-echo, energetic presentation.',
+      6: 'Minimum Phase Slow Roll-Off — Warm and musical timbre with smooth acoustic decay.',
+      7: 'Minimum Phase — Organic vintage analogue warmth with gentle roll-off.'
+    };
+    const selPcm = document.getElementById('selPcmFilter');
+    const pcmDesc = document.getElementById('pcmFilterDesc');
+    selPcm.addEventListener('change', (e) => {
+      state.pcmFilter = Number(e.target.value);
+      pcmDesc.textContent = pcmFilterDescriptions[state.pcmFilter] || '';
+      log(`PCM Digital Filter set to #${state.pcmFilter}: ${selPcm.options[selPcm.selectedIndex].text}`);
+      scheduleDeviceSync();
+    });
+
+    const modalAutoEq = document.getElementById('modalAutoEq');
+    document.getElementById('btnOpenAutoEq').addEventListener('click', () => {
+      modalAutoEq.classList.remove('opacity-0', 'pointer-events-none');
+    });
+    document.getElementById('btnCloseAutoEq').addEventListener('click', () => {
+      modalAutoEq.classList.add('opacity-0', 'pointer-events-none');
+    });
+
+    document.getElementById('btnApplyAutoEq').addEventListener('click', () => {
+      const text = document.getElementById('txtAutoEqInput').value;
+      if (!text.trim()) return;
+
+      const lines = text.split('\n');
+      let bandIdx = 0;
+
+      lines.forEach(line => {
+        if (bandIdx >= 10) return;
+        const clean = line.trim();
+        if (!clean.startsWith('Filter') && !clean.includes('Fc')) return;
+
+        const freqMatch = clean.match(/Fc\s+([0-9.]+)\s*Hz/i);
+        const gainMatch = clean.match(/Gain\s+([+-]?[0-9.]+)\s*dB/i);
+        const qMatch = clean.match(/Q\s+([0-9.]+)/i);
+        const typeMatch = clean.match(/(PK|LS|HS|LPF|HPF|BPF|NO)/i);
+
+        if (freqMatch && gainMatch) {
+          const f = Math.round(Number(freqMatch[1]));
+          const g = parseFloat(Number(gainMatch[1]).toFixed(1));
+          const q = qMatch ? parseFloat(Number(qMatch[1]).toFixed(2)) : 1.41;
+
+          let t = 'PEAK';
+          if (typeMatch) {
+            const rawType = typeMatch[1].toUpperCase();
+            if (rawType === 'LS' || rawType === 'LSC') t = 'LOW_SHELF';
+            else if (rawType === 'HS' || rawType === 'HSC') t = 'HIGH_SHELF';
+            else if (rawType === 'LPF') t = 'LOW_PASS';
+            else if (rawType === 'HPF') t = 'HIGH_PASS';
+            else if (rawType === 'NO') t = 'NOTCH';
+          }
+
+          state.bands[bandIdx].freq = f;
+          state.bands[bandIdx].gain = Math.max(-12, Math.min(12, g));
+          state.bands[bandIdx].q = Math.max(0.1, Math.min(10, q));
+          state.bands[bandIdx].type = t;
+          state.bands[bandIdx].enabled = !clean.includes('OFF');
+          bandIdx++;
+        }
+      });
+
+      const preampMatch = text.match(/Preamp:\s*([+-]?[0-9.]+)\s*dB/i);
+      if (preampMatch) {
+        state.globalGain = parseFloat(Number(preampMatch[1]).toFixed(1));
+        sliderGlobalGain.value = state.globalGain;
+        valGlobalGain.textContent = `${state.globalGain.toFixed(1)} dB`;
+      }
+
+      modalAutoEq.classList.add('opacity-0', 'pointer-events-none');
+      renderBandChips();
+      updateActiveBandUI();
+      renderCurve();
+      scheduleDeviceSync();
+      log(`Successfully imported ${bandIdx} AutoEQ filters!`);
+    });
+
+    
+    /* ─────────────────────────────────────────────────────────
+       9. NATIVE DESKTOP BRIDGE (PYWEBVIEW) & WEBHID FALLBACK
+       ───────────────────────────────────────────────────────── */
+    const CAYIN_VID = 0x2D87;
+    const CAYIN_PID_U2 = 0x003B;
+    const CAYIN_PID_U1 = 0x003A;
+    const REPORT_ID_VENDOR = 75; // 0x4B (UsagePage 0xFF01, Usage 0x0002)
+
+    // Command Codes
+    const CMD_GET_DEV_INFO   = 0x1001;
+    const CMD_SET_VOLUME     = 0x0002;
+    const CMD_GET_VOLUME     = 0x1002;
+    const CMD_SET_GAIN       = 0x0003;
+    const CMD_SET_WORK_MODE  = 0x0004;
+    const CMD_SET_OUT_MODE   = 0x0005;
+    const CMD_SET_PCM_FILTER = 0x0006;
+    const CMD_SET_SCREEN_OFF = 0x0007;
+    const CMD_SET_BALANCE    = 0x0008;
+    const CMD_SET_PEQ_BANDS  = 0x0100;
+    const CMD_GET_PEQ_BANDS  = 0x0101;
+    const CMD_SET_PEQ_ENABLE = 0x0102;
+
+    const crc32Table = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let j = 0; j < 8; j++) {
+        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      crc32Table[i] = c >>> 0;
+    }
+    function calcCrc32(bytes) {
+      let crc = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) {
+        crc = (crc >>> 8) ^ crc32Table[(crc ^ bytes[i]) & 0xFF];
+      }
+      return (crc ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    let seqCounter = 0;
+    function buildRu3Packet(cmd, payload = new Uint8Array(0)) {
+      const magic = 0x58585542; // "BUXX" in Little Endian
+      const seq = (seqCounter++) & 0xFF;
+      const flag = 0x00;
+      const length = payload.length;
+
+      const headRaw = new Uint8Array(10);
+      const headView = new DataView(headRaw.buffer);
+      headView.setUint32(0, magic, true);
+      headView.setUint16(4, cmd, true);
+      headView.setUint8(6, seq);
+      headView.setUint8(7, flag);
+      headView.setUint16(8, length, true);
+
+      const headCrc = calcCrc32(headRaw);
+
+      const totalLen = 14 + length + (length > 0 ? 4 : 0);
+      const packet = new Uint8Array(totalLen);
+      packet.set(headRaw, 0);
+      const packetView = new DataView(packet.buffer);
+      packetView.setUint32(10, headCrc, true);
+
+      if (length > 0) {
+        packet.set(payload, 14);
+        const bodyCrc = calcCrc32(payload);
+        packetView.setUint32(14 + length, bodyCrc, true);
+      }
+
+      return packet;
+    }
+
+    function isNativeDesktop() {
+      return Boolean(window.pywebview && window.pywebview.api);
+    }
+
+    async function sendVendorCommand(cmd, payload = new Uint8Array(0)) {
+      if (isNativeDesktop()) {
+        return;
+      }
+
+      if (!state.connected || !state.device) {
+        log(`Simulated CMD 0x${cmd.toString(16).padStart(4, '0')} (len=${payload.length})`);
+        return;
+      }
+
+      try {
+        const pkt = buildRu3Packet(cmd, payload);
+        const buf63 = new Uint8Array(63);
+        buf63.set(pkt.subarray(0, Math.min(pkt.length, 63)));
+
+        await state.device.sendReport(REPORT_ID_VENDOR, buf63);
+        
+        if (pkt.length > 63) {
+          const buf63_2 = new Uint8Array(63);
+          buf63_2.set(pkt.subarray(63, Math.min(pkt.length, 126)));
+          await state.device.sendReport(REPORT_ID_VENDOR, buf63_2);
+        }
+
+        const hexStr = Array.from(buf63.subarray(0, Math.min(pkt.length, 18)))
+          .map(b => b.toString(16).padStart(2, '0')).join(' ');
+        log(`TX [CMD 0x${cmd.toString(16).padStart(4, '0')}]: ${hexStr}...`, 'success');
+      } catch (err) {
+        log(`TX Error (CMD 0x${cmd.toString(16)}): ${err.message}`, 'error');
+      }
+    }
+
+    const btnConnect = document.getElementById('btnConnect');
+    const connBadge = document.getElementById('connStatusBadge');
+    const connText = document.getElementById('connStatusText');
+
+    async function connectCayinRU3() {
+      if (isNativeDesktop()) {
+        const init = await window.pywebview.api.get_initial_state();
+        if (init.connected) {
+          state.connected = true;
+          connBadge.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-mono';
+          connBadge.querySelector('span').className = 'w-2 h-2 rounded-full bg-emerald-400 led-glow';
+          connText.textContent = `${init.device_name} (Native Connected)`;
+          btnConnect.querySelector('#btnConnectLabel').textContent = 'Sync RU3';
+          log(`Native Desktop App connected to ${init.device_name}!`, 'success');
+          setVolume(init.volume, false);
+          scheduleDeviceSync();
+        } else {
+          log('Native Desktop: Cayin RU3 hardware not detected. Please plug in the DAC.', 'warn');
+        }
+        return;
+      }
+
+      if (!navigator.hid) {
+        log('WebHID is not supported in this browser. Please use Google Chrome or Microsoft Edge.', 'error');
+        alert('WebHID is not supported by your browser. Please run the Native Desktop App (python app.py) for direct control!');
+        return;
+      }
+
+      try {
+        log('Requesting Cayin RU3 HID device (Report ID 75 / Vendor 0x2D87)...');
+        const devices = await navigator.hid.requestDevice({
+          filters: [
+            { vendorId: CAYIN_VID, productId: CAYIN_PID_U2 },
+            { vendorId: CAYIN_VID, productId: CAYIN_PID_U1 },
+            { vendorId: CAYIN_VID }
+          ]
+        });
+
+        if (!devices || devices.length === 0) {
+          log('No device selected.');
+          return;
+        }
+
+        const dev = devices[0];
+        await dev.open();
+        state.device = dev;
+        state.connected = true;
+
+        connBadge.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-mono';
+        connBadge.querySelector('span').className = 'w-2 h-2 rounded-full bg-emerald-400 led-glow';
+        connText.textContent = `${dev.productName || 'Cayin RU3'} Connected`;
+        btnConnect.querySelector('#btnConnectLabel').textContent = 'Sync RU3';
+
+        log(`Successfully opened ${dev.productName} (VID 0x${dev.vendorId.toString(16)}:PID 0x${dev.productId.toString(16)})`, 'success');
+
+        dev.addEventListener('inputreport', (event) => {
+          const { reportId, data } = event;
+          handleDeviceInputReport(reportId, data);
+        });
+
+        await requestDeviceInitialState();
+      } catch (err) {
+        log(`Connection error: ${err.message}`, 'error');
+      }
+    }
+
+    async function requestDeviceInitialState() {
+      log('Querying RU3 hardware parameters...');
+      await sendVendorCommand(CMD_GET_DEV_INFO);
+      await sendVendorCommand(CMD_GET_VOLUME);
+      await sendVendorCommand(CMD_GET_PEQ_BANDS);
+    }
+
+    function handleDeviceInputReport(reportId, data) {
+      if (data.byteLength < 4) return;
+      const bytes = new Uint8Array(data.buffer);
+      const hexStr = Array.from(bytes.subarray(0, Math.min(bytes.length, 16)))
+        .map(b => b.toString(16).padStart(2, '0')).join(' ');
+      log(`RX [Report ${reportId}]: ${hexStr}...`);
+
+      if (bytes[0] === 0x42 && bytes[1] === 0x55 && bytes[2] === 0x58 && bytes[3] === 0x58) {
+        const view = new DataView(data.buffer);
+        const cmd = view.getUint16(4, true);
+        const len = view.getUint16(8, true);
+        log(`Decoded BUXX Frame: CMD 0x${cmd.toString(16).padStart(4, '0')}, PayloadLen=${len}`, 'success');
+
+        if (len > 0 && bytes.length >= 14 + len) {
+          const payload = bytes.subarray(14, 14 + len);
+          processIncomingPayload(cmd, payload);
+        }
+      }
+    }
+
+    function processIncomingPayload(cmd, payload) {
+      if (cmd === CMD_GET_VOLUME || cmd === CMD_SET_VOLUME) {
+        const devVol = payload[0];
+        if (devVol >= 0 && devVol <= 100) {
+          setVolume(devVol, false);
+          log(`Device Volume reported: ${devVol}`, 'success');
+        }
+      }
+      else if (cmd === CMD_SET_GAIN) {
+        const isHigh = (payload[0] === 1);
+        state.gainLevel = isHigh ? 'HIGH' : 'LOW';
+        btnGainLow.className = !isHigh ? 'py-2 rounded-lg font-bold border transition-all bg-cyan-500/10 text-cyan-400 border-cyan-500/40' : 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5';
+        btnGainHigh.className = isHigh ? 'py-2 rounded-lg font-bold border transition-all bg-amber-500/10 text-amber-400 border-amber-500/40' : 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5';
+        log(`Device Gain reported: ${state.gainLevel}`, 'success');
+      }
+      else if (cmd === CMD_SET_WORK_MODE) {
+        const isHyp = (payload[0] === 1);
+        state.workMode = isHyp ? 'HYP' : 'STD';
+        chipWorkMode.textContent = isHyp ? 'HYP (Hyper Turbo)' : 'STD (Standard)';
+      }
+      saveStateToStorage();
+    }
+
+    btnConnect.addEventListener('click', connectCayinRU3);
+
+    let syncTimer = null;
+    function scheduleDeviceSync() {
+      saveStateToStorage();
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => {
+        syncAllToDevice();
+      }, 50);
+    }
+
+    async function syncAllToDevice() {
+      if (isNativeDesktop()) {
+        try {
+          await window.pywebview.api.set_volume(state.volume);
+          await window.pywebview.api.set_gain(state.gainLevel);
+          await window.pywebview.api.set_work_mode(state.workMode);
+          await window.pywebview.api.set_output_mode(state.outputMode);
+          await window.pywebview.api.set_pcm_filter(state.pcmFilter);
+          await window.pywebview.api.set_screen_timeout(state.screenTimeout);
+          await window.pywebview.api.sync_peq(state.bands, state.masterPeqEnabled);
+          log('All 10-Band PEQ and Hardware registers synchronized via Native Desktop Engine!', 'success');
+        } catch (err) {
+          log(`Native sync error: ${err.message}`, 'warn');
+        }
+        return;
+      }
+
+      if (!state.connected || !state.device) {
+        return;
+      }
+
+      try {
+        const volPayload = new Uint8Array([state.volume, 0, 0, 0]);
+        await sendVendorCommand(CMD_SET_VOLUME, volPayload);
+
+        const gainPayload = new Uint8Array([state.gainLevel === 'HIGH' ? 1 : 0]);
+        await sendVendorCommand(CMD_SET_GAIN, gainPayload);
+
+        const workPayload = new Uint8Array([state.workMode === 'HYP' ? 1 : 0]);
+        await sendVendorCommand(CMD_SET_WORK_MODE, workPayload);
+
+        const outPayload = new Uint8Array([state.outputMode === 'LO' ? 1 : 0]);
+        await sendVendorCommand(CMD_SET_OUT_MODE, outPayload);
+
+        const filterPayload = new Uint8Array([state.pcmFilter]);
+        await sendVendorCommand(CMD_SET_PCM_FILTER, filterPayload);
+
+        const screenPayload = new Uint8Array([state.screenTimeout]);
+        await sendVendorCommand(CMD_SET_SCREEN_OFF, screenPayload);
+
+        const peqPayload = new Uint8Array(10 * 8);
+        const view = new DataView(peqPayload.buffer);
+
+        state.bands.forEach((b, i) => {
+          const offset = i * 8;
+          view.setUint16(offset + 0, b.freq, true);
+          const gain88 = Math.round(b.gain * 256);
+          view.setInt16(offset + 2, gain88, true);
+          const qVal = Math.round(b.q * 100);
+          view.setUint16(offset + 4, qVal, true);
+          
+          let typeByte = 0;
+          if (b.type === 'LOW_SHELF') typeByte = 1;
+          else if (b.type === 'HIGH_SHELF') typeByte = 2;
+          else if (b.type === 'LOW_PASS') typeByte = 3;
+          else if (b.type === 'HIGH_PASS') typeByte = 4;
+          else if (b.type === 'BAND_PASS') typeByte = 5;
+          else if (b.type === 'NOTCH') typeByte = 6;
+          else if (b.type === 'ALL_PASS') typeByte = 7;
+          
+          view.setUint8(offset + 6, typeByte);
+          view.setUint8(offset + 7, b.enabled ? 1 : 0);
+        });
+
+        await sendVendorCommand(CMD_SET_PEQ_BANDS, peqPayload);
+        await sendVendorCommand(CMD_SET_PEQ_ENABLE, new Uint8Array([state.masterPeqEnabled ? 1 : 0]));
+
+        log('All 10-Band PEQ and Hardware registers synchronized to Cayin RU3!', 'success');
+      } catch (err) {
+        log(`Sync warning: ${err.message}`, 'warn');
+      }
+    }
+
+    function saveStateToStorage() {
+      try {
+        const persistData = {
+          volume: state.volume,
+          gainLevel: state.gainLevel,
+          workMode: state.workMode,
+          outputMode: state.outputMode,
+          pcmFilter: state.pcmFilter,
+          screenTimeout: state.screenTimeout,
+          balance: state.balance,
+          globalGain: state.globalGain,
+          masterPeqEnabled: state.masterPeqEnabled,
+          bands: state.bands
+        };
+        localStorage.setItem('cayin_ru3_peq_state', JSON.stringify(persistData));
+      } catch (e) {}
+    }
+
+    function loadStateFromStorage() {
+      try {
+        const raw = localStorage.getItem('cayin_ru3_peq_state');
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.volume !== undefined) state.volume = data.volume;
+          if (data.gainLevel) state.gainLevel = data.gainLevel;
+          if (data.workMode) state.workMode = data.workMode;
+          if (data.outputMode) state.outputMode = data.outputMode;
+          if (data.pcmFilter) state.pcmFilter = data.pcmFilter;
+          if (data.screenTimeout) state.screenTimeout = data.screenTimeout;
+          if (data.balance !== undefined) state.balance = data.balance;
+          if (data.globalGain !== undefined) state.globalGain = data.globalGain;
+          if (data.masterPeqEnabled !== undefined) state.masterPeqEnabled = data.masterPeqEnabled;
+          if (data.bands && Array.isArray(data.bands)) state.bands = data.bands;
+          log('Restored settings and PEQ tuning from local storage.');
+        } else {
+          state.volume = 70;
+        }
+      } catch (e) {
+        state.volume = 70;
+      }
+    }
+
+    function log(msg, level = 'info') {
+      const box = document.getElementById('logBox');
+      if (!box) return;
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      
+      let colorClass = 'text-zinc-400';
+      if (level === 'error') colorClass = 'text-red-400 font-bold';
+      else if (level === 'warn') colorClass = 'text-amber-400';
+      else if (level === 'success') colorClass = 'text-emerald-400 font-semibold';
+
+      div.className = colorClass;
+      div.textContent = `[${time}] ${msg}`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    document.getElementById('btnClearLog').addEventListener('click', () => {
+      document.getElementById('logBox').innerHTML = '<div class="text-zinc-600">● Log cleared.</div>';
+    });
+
+    window.addEventListener('pywebviewready', async () => {
+      log('Desktop Native Bridge (pywebview) connected.', 'success');
+      try {
+        const init = await window.pywebview.api.get_initial_state();
+        if (init.connected) {
+          state.connected = true;
+          connBadge.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-mono';
+          connBadge.querySelector('span').className = 'w-2 h-2 rounded-full bg-emerald-400 led-glow';
+          connText.textContent = `${init.device_name} (Native Connected)`;
+          btnConnect.querySelector('#btnConnectLabel').textContent = 'Sync RU3';
+          log(`Native Desktop App bound to ${init.device_name} (OS Volume: ${init.volume}%)`, 'success');
+          setVolume(init.volume, false);
+        }
+      } catch (e) {
+        log(`pywebviewready error: ${e.message}`, 'error');
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        loadStateFromStorage();
+        setVolume(state.volume, false);
+        
+        if (state.gainLevel === 'HIGH') {
+          btnGainHigh.className = 'py-2 rounded-lg font-bold border transition-all bg-amber-500/10 text-amber-400 border-amber-500/40';
+          btnGainLow.className = 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5';
+        }
+        if (state.workMode === 'HYP') {
+          btnWorkHYP.className = 'py-2 rounded-lg font-bold border transition-all bg-purple-500/10 text-purple-400 border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.2)]';
+          btnWorkSTD.className = 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5';
+          chipWorkMode.textContent = 'HYP (Hyper Turbo)';
+        }
+        if (state.outputMode === 'LO') {
+          btnModeLO.className = 'py-2 rounded-lg font-bold border transition-all bg-amber-500/10 text-amber-400 border-amber-500/40';
+          btnModePO.className = 'py-2 rounded-lg font-bold border transition-all bg-zinc-900 text-zinc-400 border-white/5';
+          chipOutMode.textContent = 'LO (Line-Level)';
+          chipOutMode.className = 'font-bold text-amber-400';
+          sliderVol.disabled = true;
+        }
+        selPcm.value = state.pcmFilter;
+        pcmDesc.textContent = pcmFilterDescriptions[state.pcmFilter] || '';
+
+        sliderGlobalGain.value = state.globalGain;
+        valGlobalGain.textContent = `${state.globalGain.toFixed(1)} dB`;
+
+        renderBandChips();
+        updateActiveBandUI();
+        renderPresets();
+        resizeCanvas();
+        log('Cayin RU3 High-End Studio Deck ready.', 'success');
+      } catch (err) {
+        log(`Initialization error: ${err.message}`, 'error');
+      }
+    });
+  </script>
+
+</body>
+</html>
