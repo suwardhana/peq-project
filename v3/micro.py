@@ -362,7 +362,10 @@ class Controller:
 
 
 def open_device():
-    import hid
+    try:
+        import hidraw as hid  # Linux: hidraw backend uses /dev/hidraw*, not libusb
+    except ImportError:
+        import hid
     devices = [d for d in hid.enumerate(VID, PID)]
     if len(devices) != 1:
         raise TransportError(

@@ -1,72 +1,53 @@
 'use strict';
 
-const API_URL = 'http://127.0.0.1:8766/api/peq';
+importScripts('micro.js');
+
 const APPLY_MESSAGE = 'MICRO_APPLY_PEQ';
-const REQUEST_TIMEOUT_MS = 30000;
+const APP_URL = chrome.runtime.getURL('app.html');
 
-async function readJson(response) {
-  const text = await response.text();
-  if (!text) return {};
-  try {
-    return JSON.parse(text);
-  } catch {
-    return { error: text };
+/* Toolbar button: open the PEQ editor (focus it if already open). */
+chrome.action.onClicked.addListener(async () => {
+  const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  const existing = open.find((client) => client.url === APP_URL);
+  if (existing) {
+    await existing.focus();
+    return;
   }
-}
+  await chrome.tabs.create({ url: APP_URL });
+});
 
+/* Apply from the squig.link / hangout page. WebHID access is granted once in
+   the editor page (same extension origin) and reused here. */
 async function applyPeq(bands, pregain) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-  const body = { bands };
-  if (typeof pregain === 'number') body.pregain = pregain;
-
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: controller.signal
-    });
-    const payload = await readJson(response);
-    const results = Array.isArray(payload.bands) ? payload.bands : null;
-    const verifiedCount = results
-      ? results.filter((band) => band.verified).length
-      : null;
-    const pregainResult = payload.pregain || null;
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        status: response.status,
-        error: payload.error
-          || `DAC backend returned HTTP ${response.status}.`,
-        bands: results,
-        verifiedCount,
-        pregain: pregainResult
-      };
-    }
-
-    return {
-      ok: true,
-      bands: results,
-      verifiedCount,
-      totalCount: results ? results.length : bands.length,
-      pregain: pregainResult
-    };
-  } catch (error) {
-    if (error && error.name === 'AbortError') {
-      return {
-        ok: false,
-        error: 'Timed out waiting for the DAC backend.'
-      };
-    }
+  const device = await MicroDevice.findDevice();
+  if (!device) {
     return {
       ok: false,
-      error: 'Backend not reachable. Start the v3 server first.'
+      error: 'DAC not authorised yet. Click the extension icon and press Connect once.'
     };
+  }
+  let controller;
+  try {
+    controller = await MicroDevice.openController(device);
+    const payload = await controller.setPeq(
+      bands, typeof pregain === 'number' ? pregain : null
+    );
+    const verifiedCount = payload.bands.filter((band) => band.verified).length;
+    return {
+      ok: verifiedCount === payload.bands.length,
+      error: verifiedCount === payload.bands.length ? undefined : 'Read-back mismatch.',
+      bands: payload.bands,
+      verifiedCount,
+      totalCount: payload.bands.length,
+      pregain: payload.pregain
+    };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
   } finally {
-    clearTimeout(timeout);
+    if (controller) {
+      controller.close();
+      await device.close().catch(() => {});
+    }
   }
 }
 
@@ -76,12 +57,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     sendResponse({ ok: false, error: 'Expected exactly 8 PEQ bands.' });
     return false;
   }
-
-  applyPeq(message.bands, message.pregain)
-    .then(sendResponse)
-    .catch((error) => sendResponse({
-      ok: false,
-      error: error instanceof Error ? error.message : String(error)
-    }));
+  applyPeq(message.bands, message.pregain).then(sendResponse);
   return true;
 });

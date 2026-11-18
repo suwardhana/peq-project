@@ -3,7 +3,7 @@
 set -eu
 cd "$(dirname "$0")"
 
-PY=".venv-mac/bin/python"
+PY=".venv/bin/python"; [ -x "$PY" ] || PY=".venv-mac/bin/python"
 URL="http://127.0.0.1:8766"
 
 if [ ! -x "$PY" ]; then

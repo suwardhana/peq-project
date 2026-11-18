@@ -3,12 +3,14 @@
 Chrome/Edge extension that adds an **Apply PEQ to Protocol Micro** panel to
 `eq.hangout.audio` (and `squig.link`, which shares the same page structure).
 
-It reads the active EQ rows off the page, converts them to the device's eight
-bands, and posts the preset to the local backend:
+The extension talks to the DAC itself over **WebHID** — no backend, no Python.
 
-```text
-POST http://127.0.0.1:8766/api/peq
-```
+- **Click the toolbar icon** → a full PEQ editor opens (graph, drag bands, AutoEq
+  import, pregain). Press **Connect** once and pick *Protocol Micro* in Chrome's
+  list; Chrome remembers the permission.
+- **On eq.hangout.audio / squig.link** the panel reads the active EQ rows,
+  converts them to the device's eight bands and writes them straight to the DAC.
+  (If the DAC was never authorised, open the editor and press Connect first.)
 
 The device has **8 bands**. When the page has more rows ticked than that, the
 panel shows the count in amber (`10/8`), disables the apply button, and offers a
@@ -18,10 +20,10 @@ it to see exactly which rows will go.
 
 ## Install
 
-1. Start the backend: `./run-v3.sh` (or `python3 v3/server.py`).
-2. Open `chrome://extensions` (or `edge://extensions`).
-3. Enable **Developer mode** → **Load unpacked**.
-4. Select this folder: `micro-dac-extension`.
+1. Open `chrome://extensions` (or `edge://extensions`).
+2. Enable **Developer mode** → **Load unpacked** → select `micro-dac-extension`.
+3. Linux only: allow your user to open the device, once —
+   `echo 'KERNEL=="hidraw*", ATTRS{idVendor}=="3302", ATTRS{idProduct}=="c20f", TAG+="uaccess"' | sudo tee /etc/udev/rules.d/70-protocol-micro.rules && sudo udevadm control --reload && sudo udevadm trigger`, then replug.
 
 ## Use
 
@@ -30,8 +32,8 @@ it to see exactly which rows will go.
 3. The panel sits under **Device PEQ** and shows `n/8` plus the preamp it read.
 4. Click **Apply PEQ to Protocol Micro** and wait for the read-back result.
 
-A successful run reports `Applied and verified: 8/8 bands.` If the backend is not
-running you get an explicit error — start `run-v3.sh` and click again.
+A successful run reports `Applied and verified: 8/8 bands.` If the DAC is not
+authorised or not plugged in you get an explicit error.
 
 ## What it reads
 
@@ -72,5 +74,6 @@ without complaint, but the vendor config for this chip family documents ±10 dB.
 node --test ./micro-dac-extension/test/peq-core.test.js
 ```
 
-`peq-core.js` is dependency-free and runs both in the browser and in Node, so
+`micro.js` is the WebHID port of `v3/micro.py` (checked against the
+hardware-captured coefficient words). `peq-core.js` is dependency-free and runs both in the browser and in Node, so
 the conversion logic is tested without a DAC or a browser.
